@@ -6,7 +6,7 @@ import { useAppContext } from "../../context/AppContext";
 
 const PAGE_SIZE = 10;
 
-// ---------------------- SKELETON ROW COMPONENT ----------------------
+//---------------------- SKELETON ROW COMPONENT ----------------------
 const SkeletonRow = () => {
   return (
     <tr className="border-b border-primary/20">

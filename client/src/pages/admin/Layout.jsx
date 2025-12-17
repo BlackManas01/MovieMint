@@ -7,23 +7,23 @@ import Loading from '../../components/Loading'
 
 const Layout = () => {
 
-  const {isAdmin, fetchIsAdmin} = useAppContext()
+  const { isAdmin, fetchIsAdmin } = useAppContext()
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchIsAdmin()
-  },[])
+  }, [])
 
   return isAdmin ? (
     <>
       <AdminNavbar />
       <div className='flex'>
-        <AdminSidebar/>
+        <AdminSidebar />
         <div className='flex-1 px-4 py-10 md:px-10 h-[calc(100vh-64px)] overflow-y-auto'>
-            <Outlet />
+          <Outlet />
         </div>
       </div>
     </>
-  ) : <Loading/>
+  ) : <Loading />
 }
 
 export default Layout

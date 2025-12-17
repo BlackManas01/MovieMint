@@ -1,4 +1,3 @@
-// src/pages/admin/Dashboard.jsx
 import {
     ChartLineIcon,
     CircleDollarSignIcon,

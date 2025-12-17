@@ -5,7 +5,6 @@ import { NavLink } from 'react-router-dom'
 import { assets } from '../../assets/assets'
 
 const AdminSidebar = () => {
-
   const user = {
     firstName: 'Admin',
     lastName: 'User',
