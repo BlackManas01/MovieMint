@@ -18,26 +18,21 @@ const TrailersSection = () => {
 
   const fetchTrailers = useCallback(async () => {
     try {
-      // Global trailers from combined endpoint (now + upcoming)
       const { data } = await axios.get("/api/show/trailers");
 
-      if (data?.success && Array.isArray(data.trailers) && data.trailers.length) {
+      if (data?.success && Array.isArray(data.trailers)) {
         setTrailers(data.trailers);
-        setCurrentIndex(0);
-        setLoading(false);
       } else {
-        throw new Error("Empty trailer list");
+        setTrailers([]);
       }
     } catch (err) {
       console.error("Trailer fetch error:", err.message);
-
-      if (!trailers.length) {
-        setTimeout(() => setAttempt((a) => a + 1), 2000);
-      } else {
-        setLoading(false);
-      }
+      setTrailers([]);
+    } finally {
+      setLoading(false);
     }
-  }, [axios, trailers.length]);
+  }, [axios]);
+
 
   useEffect(() => {
     fetchTrailers();
@@ -107,7 +102,6 @@ const TrailersSection = () => {
               width="960px"
               height="540px"
             />
-
             <div className="max-w-[960px] mx-auto mt-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm md:text-base text-gray-200 font-medium truncate">
                 {currentTrailer.title}
@@ -121,7 +115,14 @@ const TrailersSection = () => {
             </div>
           </>
         ) : (
-          <div className="mx-auto max-w-full w-[960px] h-[200px] bg-gray-900/60 rounded-xl animate-pulse" />
+          <div
+            className="mx-auto max-w-[960px] h-[200px]
+                 bg-gray-900/60 rounded-xl
+                 flex items-center justify-center
+                 text-gray-400 text-sm"
+          >
+            Trailers coming soon 🎬
+          </div>
         )}
       </div>
 
