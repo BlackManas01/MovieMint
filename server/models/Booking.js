@@ -16,6 +16,10 @@ const bookingSchema = new mongoose.Schema({
     expiresAt: { type: Date },
     ticketUrl: { type: String },
     ticketPath: { type: String },
+    userSnapshot: {
+        name: String,
+        email: String
+    }
 }, { timestamps: true });
 
 const Booking = mongoose.model("Booking", bookingSchema);

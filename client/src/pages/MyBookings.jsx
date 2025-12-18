@@ -478,6 +478,26 @@ const MyBookings = () => {
     });
   };
 
+  const formatShowDate = (item) => {
+    const t =
+      item.show?.showDateTime ||
+      item.showDateTime ||
+      item.show?.showTime ||
+      item.showTime;
+
+    if (!t) return "—";
+
+    const d = new Date(t);
+    if (isNaN(d.getTime())) return "—";
+
+    return d.toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const resolveTicketUrl = (item) =>
     item.ticketUrl ||
     item.ticketPdf ||
@@ -620,13 +640,23 @@ const MyBookings = () => {
                           )}
                         </p>
                         <div className="mt-4">
-                          <div className="text-xs text-gray-400">Theater & time</div>
+                          <div className="text-xs text-gray-400">Theater, date & time</div>
+
                           <div className="font-medium mt-1">
-                            {resolveTheaterName(item)} •{" "}
-                            {resolveShowTime(item)}
+                            {resolveTheaterName(item)}
                           </div>
 
+                          {/* DATE */}
+                          <div className="text-sm text-gray-300 mt-1">
+                            {formatShowDate(item)}
+                          </div>
+
+                          {/* TIME */}
+                          <div className="text-sm text-gray-300">
+                            {resolveShowTime(item)}
+                          </div>
                         </div>
+
 
                         <div className="mt-3">
                           <div className="text-xs text-gray-400">Seats</div>

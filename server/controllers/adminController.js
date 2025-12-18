@@ -142,10 +142,10 @@ export const getAllShows = async (req, res) => {
 export const getAllBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({})
-            .populate("user")
+            .populate("user", "name firstName lastName email")
             .populate({
                 path: "show",
-                populate: { path: "movie" },
+                populate: { path: "movie", select: "title" },
             })
             .sort({ createdAt: -1 })
             .lean();

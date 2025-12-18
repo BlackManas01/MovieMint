@@ -4,6 +4,7 @@ import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import Stripe from "stripe";
 import { generateTicketPdf } from "../utils/generateTicketPdf.js";
+import { clerkClient } from "@clerk/clerk-sdk-node";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 console.log("STRIPE CHECKOUT:", stripe.checkout ? "OK" : "BROKEN");
@@ -74,6 +75,7 @@ export const createBooking = async (req, res) => {
         const { userId } = req.auth();
         const { showId, selectedSeats = [] } = req.body;
         const { origin } = req.headers;
+        const clerkUser = await clerkClient.users.getUser(userId);
 
         if (!showId || !Array.isArray(selectedSeats) || selectedSeats.length === 0) {
             return res.json({ success: false, message: "showId and selectedSeats required" });
@@ -115,6 +117,13 @@ export const createBooking = async (req, res) => {
         const expiresAt = new Date(Date.now() + HOLD_MINUTES * 60 * 1000); // e.g., 10 minutes
         const booking = await Booking.create({
             user: userId,
+            userSnapshot: {
+                name:
+                    clerkUser.fullName ||
+                    `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
+                email: clerkUser.emailAddresses?.[0]?.emailAddress || "",
+            },
+
             show: showId,
             amount,
             seats: selectedSeats,
@@ -267,6 +276,7 @@ export const seatsStream = async (req, res) => {
 
         const sendSnapshot = async () => {
             try {
+                const now = Date.now();
                 const showData = await Show.findById(showId);
                 if (!showData) {
                     res.write(`event: seats\n`);
@@ -278,15 +288,20 @@ export const seatsStream = async (req, res) => {
 
                 const occupiedSeats = showData.occupiedSeats ? Object.keys(showData.occupiedSeats) : [];
                 const heldMap = showData.heldSeats || {};
-                const heldSeats = Object.keys(heldMap).map((seat) => {
-                    const entry = heldMap[seat];
-                    return {
-                        seat,
-                        bookingId: entry.bookingId,
-                        user: entry.user,
-                        expiresAt: entry.expiresAt,
-                    };
-                });
+                const heldSeats = Object.keys(heldMap)
+                    .filter(seat => {
+                        const h = heldMap[seat];
+                        return h?.expiresAt && new Date(h.expiresAt).getTime() > now;
+                    })
+                    .map(seat => {
+                        const h = heldMap[seat];
+                        return {
+                            seat,
+                            bookingId: h.bookingId,
+                            user: h.user,
+                            expiresAt: h.expiresAt,
+                        };
+                    });
 
                 const payload = { occupiedSeats, heldSeats, timestamp: new Date().toISOString() };
                 res.write(`event: seats\n`);

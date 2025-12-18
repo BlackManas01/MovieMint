@@ -122,6 +122,7 @@ const SeatLayout = () => {
   const [tempHold, setTempHold] = useState(null);
   const [serverHeldSeats, setServerHeldSeats] = useState([]);
   const [holdTimeLeft, setHoldTimeLeft] = useState(null);
+  const [navLoading, setNavLoading] = useState(false);
 
   const [cardHiddenLocal, setCardHiddenLocal] = useState(false); // hides the UI card only (no release)
   const [actionLoading, setActionLoading] = useState({ active: false, message: "" });
@@ -436,6 +437,8 @@ const SeatLayout = () => {
 
   /* ---------- create a client-side booking object and navigate to review ---------- */
   const bookTickets = async () => {
+    if (navLoading) return;
+    setNavLoading(true);
     try {
       if (!selectedTimeSlot) {
         toast.error("Please select a time and seats");
@@ -567,6 +570,7 @@ const SeatLayout = () => {
 
     } catch (err) {
       console.error("bookTickets error:", err);
+      setNavLoading(false);
       toast.error("Could not open review page");
     }
   };
@@ -963,6 +967,41 @@ const SeatLayout = () => {
                   <path d="M22 12a10 10 0 0 0-10-10" stroke="white" strokeWidth="4" strokeLinecap="round"></path>
                 </svg>
               </div>
+            </div>
+          </div>
+        )}
+        {navLoading && (
+          <div className="fixed inset-0 z-[5000] flex flex-col items-center justify-center">
+            {/* BLUR BACKGROUND */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+
+            {/* LOADER + TEXT */}
+            <div className="relative z-10 flex flex-col items-center">
+              {/* SPINNER */}
+              <svg
+                className="animate-spin h-12 w-12 text-white"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="2.5"
+                />
+                <path
+                  d="M22 12a10 10 0 0 0-10-10"
+                  stroke="white"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              {/* TEXT */}
+              <p className="mt-4 text-sm text-gray-300 text-center">
+                Please wait while we confirm your seats…
+              </p>
             </div>
           </div>
         )}

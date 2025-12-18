@@ -248,6 +248,15 @@ const ReviewYourBooking = () => {
         window.location.href = booking.paymentLink;
     };
 
+    const formatDate = (dateStr) => {
+        if (!dateStr) return "";
+        return new Date(dateStr).toLocaleDateString("en-IN", {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
 
     // Back handler: save temp-hold and navigate explicitly back to SeatLayout with showId/time query params
     const handleBackAndHold = () => {
@@ -353,9 +362,26 @@ const ReviewYourBooking = () => {
 
                                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <div className="text-xs text-gray-300">Theater & time</div>
-                                        <div className="font-medium text-white mt-1">{booking.show?.theaterName || booking.theaterName || ""}</div>
-                                        <div className="text-sm text-gray-300 mt-1">{booking.show?.showTime ? isoTimeFormat(booking.show.showTime) : (booking.time ? isoTimeFormat(booking.time) : "")}</div>
+                                        <div className="text-xs text-gray-300">Theater, date & time</div>
+
+                                        <div className="font-medium text-white mt-1">
+                                            {booking.show?.theaterName || booking.theaterName || ""}
+                                        </div>
+
+                                        {/* DATE */}
+                                        <div className="text-sm text-gray-300 mt-1">
+                                            {formatDate(
+                                                booking.date ||
+                                                booking.show?.showTime
+                                            )}
+                                        </div>
+
+                                        {/* TIME */}
+                                        <div className="text-sm text-gray-300">
+                                            {booking.show?.showTime
+                                                ? isoTimeFormat(booking.show.showTime)
+                                                : (booking.time ? isoTimeFormat(booking.time) : "")}
+                                        </div>
                                     </div>
 
                                     <div>
