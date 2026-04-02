@@ -1,11 +1,11 @@
-// controllers/adminController.js
+// controllers/adminController.js - Admin dashboard, show listing, and booking management
 
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import User from "../models/User.js";
 import { adminClearStuck } from "./bookingController.js";
 
-// Simple admin check
+// GET /api/admin/is-admin - Returns true if the user passed the protectAdmin middleware
 export const isAdmin = async (req, res) => {
     res.json({ success: true, isAdmin: true });
 };

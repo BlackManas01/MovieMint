@@ -1,3 +1,4 @@
+// pages/MovieDetails.jsx - Full movie detail page with showtimes, trailers, cast, and date/theater selection
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Heart, PlayCircleIcon, StarIcon, X } from "lucide-react";
@@ -65,7 +66,7 @@ const MovieDetails = () => {
         setTmdbMovie(data.movie);
       }
     } catch (error) {
-      console.log("Now-playing TMDB details error ➜", error.message);
+      // TMDB details fetch failed silently
     }
   };
 
@@ -88,7 +89,7 @@ const MovieDetails = () => {
         toast.success(data.message);
       }
     } catch (error) {
-      console.log(error);
+      // Favorite toggle failed silently
     }
   };
 

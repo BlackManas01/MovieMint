@@ -1,9 +1,11 @@
-// utils/generateTicketPdf.js
+// utils/generateTicketPdf.js - Generates a branded PDF ticket with QR code for confirmed bookings
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import fs from "fs";
 import path from "path";
 
+// Creates a PDF ticket for the given booking and saves it to /uploads/tickets/
+// Returns { url, path } for the generated file
 export const generateTicketPdf = async (booking) => {
     const doc = new PDFDocument({
         size: "A4",
@@ -154,12 +156,18 @@ export const generateTicketPdf = async (booking) => {
 
     doc.end();
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         stream.on("finish", () => {
             resolve({
                 url: publicUrl,
                 path: filePath,
             });
+        });
+        stream.on("error", (err) => {
+            reject(new Error(`Ticket PDF write failed: ${err.message}`));
+        });
+        doc.on("error", (err) => {
+            reject(new Error(`Ticket PDF generation failed: ${err.message}`));
         });
     });
 };

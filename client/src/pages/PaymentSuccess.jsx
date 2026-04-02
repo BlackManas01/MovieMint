@@ -1,4 +1,5 @@
-// src/pages/PaymentSuccess.jsx
+// pages/PaymentSuccess.jsx - Finalizes booking after Stripe payment redirect
+import { useAuth } from "@clerk/clerk-react";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Loading from "../components/Loading";
@@ -7,6 +8,7 @@ const PaymentSuccess = () => {
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const bookingId = params.get("bookingId");
+    const { getToken } = useAuth();
 
     useEffect(() => {
         if (!bookingId) {
@@ -16,12 +18,13 @@ const PaymentSuccess = () => {
 
         const finalize = async () => {
             try {
+                const token = await getToken();
                 // 🔥 THIS IS THE FIX (SERVER CONFIRM)
                 await fetch("/api/booking/confirm-booking", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({ bookingId }),
                 });

@@ -1,3 +1,4 @@
+// components/Footer.jsx - Site footer with logo, links, and download buttons
 import React from "react";
 import { assets } from "../assets/assets";
 

@@ -1,3 +1,4 @@
+// pages/Upcoming.jsx - Displays upcoming movies fetched from TMDB with "Show More" toggle
 import { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import MovieCard from "../components/MovieCard";

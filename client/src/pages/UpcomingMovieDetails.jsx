@@ -1,3 +1,4 @@
+// pages/UpcomingMovieDetails.jsx - Detail page for upcoming (unreleased) movies with trailers
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StarIcon, PlayCircleIcon, XCircle } from "lucide-react";
@@ -31,7 +32,6 @@ const UpcomingMovieDetails = () => {
                 setError("Movie details not found");
             }
         } catch (err) {
-            console.log("Details Error ➜", err.message);
             setError("Movie details failed to load");
         }
     };

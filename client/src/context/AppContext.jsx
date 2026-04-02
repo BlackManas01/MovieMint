@@ -1,11 +1,9 @@
+// context/AppContext.jsx - Global app state: auth, shows, favorites, admin check, and shared utilities
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-
-// ❌ REMOVE THIS because it blocked requests from proxy
-// axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 export const AppContext = createContext();
 

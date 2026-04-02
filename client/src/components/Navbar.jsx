@@ -1,3 +1,4 @@
+// components/Navbar.jsx - Top navigation bar with logo, links, auth button, and mobile menu
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";

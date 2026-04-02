@@ -1,3 +1,4 @@
+// components/Loading.jsx - Spinner component with optional delayed redirect
 import React, { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 

@@ -1,8 +1,9 @@
-// cron/expireTickets.js
+// cron/expireTickets.js - Scheduled job to clean up expired pending bookings
 import cron from "node-cron";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 
+// Runs every 2 minutes: finds expired pending bookings, cancels them, and releases held seats
 cron.schedule("*/2 * * * *", async () => {
     const now = new Date();
 

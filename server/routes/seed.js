@@ -2,6 +2,7 @@
 
 import express from "express";
 import Theater from "../models/theaterModel.js";
+import { protectAdmin } from "../middleware/auth.js";
 
 // NOTE: This import assumes the folder structure:
 // QuickShow-FullStack/
@@ -17,8 +18,9 @@ const router = express.Router();
  * - This endpoint is intended for development/initial setup only.
  * - It clears all existing Theater documents to avoid duplicates
  *   and then inserts a clean set from `seedTheaters`.
+ * - Protected by admin middleware to prevent unauthorized access.
  */
-router.get("/seed-theaters", async (req, res) => {
+router.get("/seed-theaters", protectAdmin, async (req, res) => {
     try {
         // Remove existing theaters to ensure a consistent baseline.
         await Theater.deleteMany({});

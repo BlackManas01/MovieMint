@@ -1,3 +1,4 @@
+// routes/userRoutes.js - User-facing API routes (bookings, favorites)
 import express from "express";
 import { getFavorites, getUserBookings, updateFavorite } from "../controllers/userController.js";
 

@@ -1,4 +1,4 @@
-// src/components/HeroSection.jsx
+// components/HeroSection.jsx - Auto-rotating movie hero banner with backdrop images and info overlay
 import React, { useEffect, useState, useCallback } from "react";
 import {
   ArrowRight,

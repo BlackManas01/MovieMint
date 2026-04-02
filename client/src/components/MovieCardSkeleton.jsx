@@ -1,4 +1,4 @@
-// src/components/MovieCardSkeleton.jsx
+// components/MovieCardSkeleton.jsx - Animated placeholder for movie card while loading
 const MovieCardSkeleton = () => {
     return (
         <div className="flex flex-col justify-between p-3 bg-gray-800 rounded-2xl w-66 animate-pulse">

@@ -1,4 +1,4 @@
-// src/pages/SeatLayout.jsx
+// pages/SeatLayout.jsx - Interactive seat selection page with real-time availability via SSE
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowRightIcon, ClockIcon } from "lucide-react";

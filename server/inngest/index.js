@@ -1,11 +1,11 @@
-// inngest/index.js
+// inngest/index.js - Async event-driven functions (Clerk sync, payment checks, emails, reminders)
 import { Inngest } from "inngest";
 import User from "../models/User.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import sendEmail from "../configs/nodeMailer.js";
 
-// Create a client to send and receive events
+// Initialize Inngest client for event-driven task processing
 export const inngest = new Inngest({ id: "movie-ticket-booking" });
 
 /**
@@ -211,14 +211,8 @@ const sendShowReminders = inngest.createFunction(
         const windowStart = new Date(in8Hours.getTime() - 10 * 60 * 1000);
 
         const reminderTasks = await step.run("prepare-reminder-tasks", async () => {
-            // Try querying various date fields; pick the one you use in Show schema
             const shows = await Show.find({
-                // if you have a unified field like showTime or showDateTime, replace accordingly
-                $or: [
-                    { showTime: { $gte: windowStart, $lte: in8Hours } },
-                    { showDateTime: { $gte: windowStart, $lte: in8Hours } },
-                    { time: { $gte: windowStart, $lte: in8Hours } },
-                ],
+                showDateTime: { $gte: windowStart, $lte: in8Hours },
             }).populate("movie");
 
             const tasks = [];

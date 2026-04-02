@@ -1,4 +1,5 @@
-// controllers/bookingController.js
+// controllers/bookingController.js - Booking CRUD, seat holding, payment confirmation, and ticket download
+import mongoose from "mongoose";
 import { inngest } from "../inngest/index.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
@@ -7,7 +8,9 @@ import { generateTicketPdf } from "../utils/generateTicketPdf.js";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-console.log("STRIPE CHECKOUT:", stripe.checkout ? "OK" : "BROKEN");
+
+const MAX_SEATS_PER_BOOKING = 10;
+const VALID_SEAT_REGEX = /^[A-Z]\d{1,2}$/;
 
 const HOLD_MINUTES = Number(process.env.BOOKING_HOLD_MINUTES || 10); // default 10 minutes
 
@@ -40,45 +43,28 @@ const cleanupExpiredHeldSeats = async (showDoc) => {
     }
 };
 
-// check seats availability against confirmed occupied AND non-expired held seats
-const checkSeatsAvailability = async (showId, selectedSeats = []) => {
-    try {
-        const showData = await Show.findById(showId);
-        if (!showData) return false;
-
-        const occupied = showData.occupiedSeats || {}; // { seatId: userId }
-        const held = showData.heldSeats || {}; // { seatId: { bookingId, user, expiresAt } }
-
-        // For safety, treat expired held seats as free (do not persist cleanup here)
-        const now = Date.now();
-
-        for (const seat of selectedSeats) {
-            // confirmed occupied
-            if (occupied[seat]) return false;
-
-            // held but not expired
-            if (held[seat] && held[seat].expiresAt && new Date(held[seat].expiresAt).getTime() > now) {
-                return false;
-            }
-        }
-        return true;
-    } catch (error) {
-        console.log("checkSeatsAvailability error:", error.message);
-        return false;
-    }
-};
-
 // POST /api/booking/create
 export const createBooking = async (req, res) => {
     try {
-        // adapt according to your auth middleware
         const { userId } = req.auth();
         const { showId, selectedSeats = [] } = req.body;
         const { origin } = req.headers;
         const clerkUser = await clerkClient.users.getUser(userId);
 
         if (!showId || !Array.isArray(selectedSeats) || selectedSeats.length === 0) {
-            return res.json({ success: false, message: "showId and selectedSeats required" });
+            return res.status(400).json({ success: false, message: "showId and selectedSeats required" });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(showId)) {
+            return res.status(400).json({ success: false, message: "Invalid showId" });
+        }
+
+        if (selectedSeats.length > MAX_SEATS_PER_BOOKING) {
+            return res.status(400).json({ success: false, message: `Maximum ${MAX_SEATS_PER_BOOKING} seats per booking` });
+        }
+
+        if (!selectedSeats.every(s => typeof s === 'string' && VALID_SEAT_REGEX.test(s))) {
+            return res.status(400).json({ success: false, message: "Invalid seat format" });
         }
 
         // load show and cleanup expired held seats
@@ -143,17 +129,11 @@ export const createBooking = async (req, res) => {
         showData.markModified("heldSeats");
         await showData.save();
 
-        // Stripe: create checkout session if stripe configured (optional)
+        // Stripe: create checkout session if stripe configured
         let paymentLink = null;
-        console.log("STRIPE DEBUG", {
-            showPrice: showData.showPrice,
-            seats: selectedSeats.length,
-            amount
-        });
 
         try {
             if (stripe) {
-                const stripeInstance = stripe;
                 const line_items = [
                     {
                         price_data: {
@@ -165,8 +145,7 @@ export const createBooking = async (req, res) => {
                     },
                 ];
 
-                console.log("STRIPE INSTANCE TYPE:", typeof stripe.checkout);
-                const session = await stripeInstance.checkout.sessions.create({
+                const session = await stripe.checkout.sessions.create({
                     success_url: `${origin}/payment-success?bookingId=${booking._id}`,
                     cancel_url: `${origin}/my-bookings`,
                     line_items,
@@ -181,6 +160,16 @@ export const createBooking = async (req, res) => {
             }
         } catch (stripeErr) {
             console.error("Stripe create session error:", stripeErr?.message || stripeErr);
+            // Clean up: delete booking and release held seats if Stripe fails
+            await Booking.deleteOne({ _id: booking._id });
+            for (const seat of selectedSeats) {
+                if (showData.heldSeats?.[seat]?.bookingId === booking._id.toString()) {
+                    delete showData.heldSeats[seat];
+                }
+            }
+            showData.markModified("heldSeats");
+            await showData.save();
+            return res.status(500).json({ success: false, message: "Payment session creation failed" });
         }
 
         // schedule an Inngest job (or any scheduler) to check payment / expire the booking
@@ -200,8 +189,8 @@ export const createBooking = async (req, res) => {
             paymentLink,
         });
     } catch (error) {
-        console.log("createBooking error:", error.message);
-        return res.json({ success: false, message: error.message });
+        console.error("createBooking error:", error.message);
+        return res.status(500).json({ success: false, message: "Failed to create booking" });
     }
 };
 
@@ -246,8 +235,8 @@ export const getSeatsForShow = async (req, res) => {
             heldSeats
         });
     } catch (error) {
-        console.log("getSeatsForShow error:", error.message);
-        return res.json({ success: false, message: error.message });
+        console.error("getSeatsForShow error:", error.message);
+        return res.status(500).json({ success: false, message: "Failed to fetch seats" });
     }
 };
 
@@ -334,7 +323,11 @@ export const seatsStream = async (req, res) => {
 export const getBooking = async (req, res) => {
     try {
         const { bookingId } = req.params;
-        if (!bookingId) return res.json({ success: false, message: "bookingId required" });
+        if (!bookingId) return res.status(400).json({ success: false, message: "bookingId required" });
+
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.status(400).json({ success: false, message: "Invalid bookingId" });
+        }
 
         const booking = await Booking.findById(bookingId)
             .populate({
@@ -352,13 +345,18 @@ export const getBooking = async (req, res) => {
                 }
             })
             .populate("user");
-        if (!booking) return res.json({ success: false, message: "Booking not found" });
-        console.log("Bookings: ", booking);
+        if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+
+        // Authorization: only the booking owner can view their booking
+        const { userId } = req.auth();
+        if (userId && String(booking.user?._id || booking.user) !== String(userId)) {
+            return res.status(403).json({ success: false, message: "Not authorized to view this booking" });
+        }
 
         return res.json({ success: true, booking });
     } catch (error) {
-        console.log("getBooking error:", error.message);
-        return res.json({ success: false, message: error.message });
+        console.error("getBooking error:", error.message);
+        return res.status(500).json({ success: false, message: "Failed to fetch booking" });
     }
 };
 
@@ -413,8 +411,8 @@ export const releaseBooking = async (req, res) => {
 
         return res.json({ success: true, message: "Released hold" });
     } catch (error) {
-        console.log("releaseBooking error:", error.message);
-        return res.json({ success: false, message: error.message });
+        console.error("releaseBooking error:", error.message);
+        return res.status(500).json({ success: false, message: "Failed to release booking" });
     }
 };
 
@@ -495,9 +493,6 @@ export const confirmBooking = async (req, res) => {
         booking.ticketPath = path;
         await booking.save();
 
-        console.log("TICKET URL:", booking.ticketUrl);
-        console.log("TICKET PATH:", booking.ticketPath);
-
         // background email / tasks
         try {
             await inngest.send({
@@ -515,8 +510,8 @@ export const confirmBooking = async (req, res) => {
             ticketUrl: booking.ticketUrl,
         });
     } catch (error) {
-        console.log("confirmBooking error:", error.message);
-        return res.json({ success: false, message: error.message });
+        console.error("confirmBooking error:", error.message);
+        return res.status(500).json({ success: false, message: "Failed to confirm booking" });
     }
 };
 
@@ -552,8 +547,8 @@ export const adminClearStuck = async (req, res) => {
 
         return res.json({ success: true, message: `Cleared ${stuck.length} stuck bookings` });
     } catch (error) {
-        console.log("adminClearStuck error:", error.message);
-        return res.json({ success: false, message: error.message });
+        console.error("adminClearStuck error:", error.message);
+        return res.status(500).json({ success: false, message: "Failed to clear stuck bookings" });
     }
 };
 

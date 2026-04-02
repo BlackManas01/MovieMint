@@ -1,4 +1,4 @@
-// src/pages/ReviewYourBooking.jsx
+// pages/ReviewYourBooking.jsx - Booking summary page with countdown timer and payment link
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Loading from "../components/Loading";
@@ -194,49 +194,6 @@ const ReviewYourBooking = () => {
         return () =>
             window.removeEventListener("TEMP_HOLD_RELEASED", onReleased);
     }, [booking]);
-
-    // const handlePayNow = async () => {
-    //     console.log("🔥 PAY NOW bookingId:", booking?.bookingId);
-
-    //     try {
-    //         setPayLoading(true);
-
-    //         const token = await getToken();
-
-    //         // 🔥 CREATE BOOKING + STRIPE SESSION
-    //         const { data } = await axios.post(
-    //             "/api/booking/create",
-    //             {
-    //                 showId: booking.showId || booking.show?.showId,
-    //                 selectedSeats: booking.seats,
-    //             },
-    //             {
-    //                 headers: { Authorization: `Bearer ${token}` },
-    //             }
-    //         );
-
-    //         if (!data.success || !data.paymentLink) {
-    //             toast.error("Payment link not available");
-    //             return;
-    //         }
-
-    //         // 🔥 update bookingId locally (VERY IMPORTANT)
-    //         setBooking((prev) => ({
-    //             ...prev,
-    //             bookingId: data.bookingId,
-    //             expiresAt: data.expiresAt,
-    //         }));
-
-    //         // 🔥 REDIRECT TO STRIPE PAGE
-    //         window.location.href = data.paymentLink;
-
-    //     } catch (err) {
-    //         console.error(err);
-    //         toast.error("Failed to start payment");
-    //     } finally {
-    //         setPayLoading(false);
-    //     }
-    // };
 
     const handlePayNow = async () => {
         if (!booking?.paymentLink) {

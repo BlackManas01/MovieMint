@@ -1,9 +1,10 @@
+// controllers/userController.js - Handles user-specific operations (bookings, favorites)
 import { clerkClient } from "@clerk/express";
 import Booking from "../models/Booking.js";
 import Movie from "../models/Movie.js";
 
 
-// API Controller Function to Get User Bookings
+// GET /api/user/bookings - Fetch all bookings for the authenticated user
 export const getUserBookings = async (req, res) => {
     try {
         const user = req.auth().userId;
@@ -30,7 +31,7 @@ export const getUserBookings = async (req, res) => {
     }
 }
 
-// API Controller Function to update Favorite Movie in Clerk User Metadata
+// POST /api/user/update-favorite - Toggle a movie in the user's favorites list (stored in Clerk metadata)
 export const updateFavorite = async (req, res) => {
     try {
         const { movieId } = req.body;
@@ -57,6 +58,7 @@ export const updateFavorite = async (req, res) => {
     }
 }
 
+// GET /api/user/favorites - Retrieve user's favorite movies from Clerk metadata
 export const getFavorites = async (req, res) => {
     try {
         const user = await clerkClient.users.getUser(req.auth().userId)

@@ -1,3 +1,4 @@
+// components/admin/Title.jsx - Reusable section title component for admin pages
 import React from 'react'
 
 const Title = ({ text1, text2 }) => {

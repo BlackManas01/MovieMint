@@ -1,3 +1,4 @@
+// components/DateSelect.jsx - Horizontally scrollable date picker for selecting show dates
 import React, { useEffect, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

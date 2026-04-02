@@ -1,3 +1,4 @@
+// assets/assets.js - Static asset imports (logo, icons, images) and dummy trailer data
 import logo from './logo.png'
 import marvelLogo from './marvelLogo.svg'
 import googlePlay from './googlePlay.svg'

@@ -1,3 +1,4 @@
+// components/MovieDetailSkeleton.jsx - Animated placeholder for movie detail page while loading
 const MovieDetailSkeleton = () => {
     return (
         <div className="px-6 md:px-16 lg:px-40 pt-30 md:pt-50 animate-pulse">

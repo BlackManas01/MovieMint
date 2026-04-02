@@ -1,3 +1,4 @@
+// pages/admin/ShowDetails.jsx - Per-movie show management with schedule editing and format pricing
 import { Eye, EyeOff, Plus, StarIcon, X } from "lucide-react";
 import React, {
     useCallback,

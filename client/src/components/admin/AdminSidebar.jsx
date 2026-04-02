@@ -1,4 +1,4 @@
-// src/pages/admin/AdminSidebar.jsx
+// components/admin/AdminSidebar.jsx - Admin panel sidebar with navigation links
 import { LayoutDashboardIcon, ListCollapseIcon, ListIcon, PlusSquareIcon } from 'lucide-react'
 import React from 'react'
 import { NavLink } from 'react-router-dom'

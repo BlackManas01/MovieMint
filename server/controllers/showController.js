@@ -690,48 +690,6 @@ export const getCombinedTrailers = async (req, res) => {
     }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              ADMIN: ADD SHOW                               */
-/* -------------------------------------------------------------------------- */
-
-export const addShow = async (req, res) => {
-    try {
-        const { movieId, showsInput, showPrice } = req.body;
-
-        // ✅ Reuse helper instead of duplicating TMDB logic
-        const movie = await ensureMovieInDbFromTmdb(movieId);
-
-        const showsToCreate = [];
-
-        (showsInput || []).forEach((show) => {
-            const showDate = show.date;
-            (show.time || []).forEach((time) => {
-                const dateTimeString = `${showDate}T${time}`;
-                showsToCreate.push({
-                    movie: movieId,
-                    showDateTime: new Date(dateTimeString),
-                    showPrice,
-                    occupiedSeats: {},
-                });
-            });
-        });
-
-        if (showsToCreate.length > 0) {
-            await Show.insertMany(showsToCreate);
-        }
-
-        await inngest.send({
-            name: "app/show.added",
-            data: { movieTitle: movie.title },
-        });
-
-        res.json({ success: true, message: "Show Added successfully." });
-    } catch (error) {
-        console.error(error);
-        res.json({ success: false, message: error.message });
-    }
-};
-
 // ADMIN: Sync TMDB now_playing -> Movie DB + generate default shows for all theaters
 export const syncNowPlayingToDbAndGenerateShows = async (req, res) => {
     try {
@@ -830,11 +788,6 @@ export const getAdminNowInTheatersMovies = async (req, res) => {
     }
 };
 
-
-// Old adminGetNowInTheaters (router me import ho raha hai) → same logic reuse
-export const adminGetNowInTheaters = async (req, res) => {
-    return getAdminNowInTheatersMovies(req, res);
-};
 
 // Toggle movie visibility for home "Now in Theaters"
 export const updateMovieHomeVisibility = async (req, res) => {

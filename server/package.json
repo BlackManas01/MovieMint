@@ -15,18 +15,17 @@
     "@clerk/clerk-sdk-node": "^4.13.23",
     "@clerk/express": "^1.5.2",
     "axios": "^1.9.0",
-    "cloudinary": "^2.6.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.3.2",
     "inngest": "^3.38.0",
     "mongoose": "^8.15.1",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.3",
     "pdfkit": "^0.17.2",
     "qrcode": "^1.5.4",
-    "stripe": "^18.2.1",
-    "svix": "^1.66.0"
+    "stripe": "^18.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

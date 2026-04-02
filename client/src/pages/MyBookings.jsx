@@ -1,4 +1,4 @@
-// src/pages/MyBookings.jsx
+// pages/MyBookings.jsx - User's booking history with status indicators and ticket downloads
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BlurCircle from "../components/BlurCircle";

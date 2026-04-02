@@ -1,12 +1,16 @@
+// controllers/stripeWebhooks.js - Handles Stripe webhook events (payment confirmation)
 import stripe from "stripe";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import { inngest } from "../inngest/index.js";
 
+// POST /api/stripe - Stripe webhook handler for checkout.session.completed events
+// Confirms booking, moves held seats to occupied, and triggers ticket generation
 export const stripeWebhooks = async (request, response) => {
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
     const sig = request.headers["stripe-signature"];
 
+    // Verify webhook signature to ensure it's from Stripe
     let event;
 
     try {
@@ -19,15 +23,12 @@ export const stripeWebhooks = async (request, response) => {
         return response.status(400).send(`Webhook Error: ${error.message}`);
     }
 
-    console.log("🔥 STRIPE WEBHOOK HIT:", event.type);
-
     try {
         if (event.type === "checkout.session.completed") {
             const session = event.data.object;
             const bookingId = session.metadata?.bookingId;
 
             if (!bookingId) {
-                console.log("❌ bookingId missing");
                 return response.json({ received: true });
             }
 
@@ -35,7 +36,6 @@ export const stripeWebhooks = async (request, response) => {
             if (!booking) return response.json({ received: true });
 
             if (booking.isPaid && booking.status === "confirmed") {
-                console.log("⚠️ already confirmed");
                 return response.json({ received: true });
             }
 
@@ -69,11 +69,11 @@ export const stripeWebhooks = async (request, response) => {
                 name: "app/show.booked",
                 data: { bookingId },
             });
-
-            console.log("✅ Seats occupied via webhook:", booking.seats);
         }
+
+        return response.json({ received: true });
     } catch (err) {
         console.error("Webhook processing error:", err);
-        response.status(500).send("Internal Server Error");
+        return response.status(500).send("Internal Server Error");
     }
 };

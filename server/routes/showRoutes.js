@@ -1,7 +1,7 @@
+// routes/showRoutes.js - Show API routes (TMDB data, admin show management, public listings)
 import express from "express";
 import {
     addTheaterSlot,
-    adminGetNowInTheaters,
     deleteExpiredShows,
     deleteShow,
     fixShowFormatAndExperience,
@@ -113,10 +113,6 @@ showRouter.post(
 
 /* ------------------------ ADMIN: NOW IN THEATERS ------------------------- */
 
-// Old endpoint (agar kahin se POST call kar rahe ho)
-showRouter.post("/admin/now-in-theaters", protectAdmin, adminGetNowInTheaters);
-
-// Main endpoint jo tum use kar rahe ho ShowDetails me
 showRouter.get(
     "/admin/now-in-theaters",
     protectAdmin,

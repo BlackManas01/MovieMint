@@ -1,4 +1,4 @@
-// src/components/FeaturedSection.jsx
+// components/FeaturedSection.jsx - Horizontal scrollable row of "Now in Theaters" movie cards
 import { ArrowRight } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";

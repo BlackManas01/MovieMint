@@ -1,5 +1,6 @@
-// src/routes/bookingRouter.js
+// routes/bookingRoutes.js - Booking API routes (create, confirm, release, seats, ticket download)
 import express from "express";
+import rateLimit from "express-rate-limit";
 import {
     createBooking,
     releaseBooking,
@@ -11,6 +12,15 @@ import {
 } from "../controllers/bookingController.js";
 
 const bookingRouter = express.Router();
+
+// Rate limit for booking creation: 5 requests per minute per IP
+const bookingCreateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    message: { success: false, message: "Too many booking attempts, please try again later" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 /**
  * Note:
@@ -26,13 +36,13 @@ const bookingRouter = express.Router();
 /* ----------------------- booking routes ----------------------- */
 
 // Create a pending booking / hold (returns bookingId, expiresAt, paymentLink if available)
-bookingRouter.post("/create", createBooking);
+bookingRouter.post("/create", bookingCreateLimiter, createBooking);
 
 // Release a pending booking (owner or admin). Body: { bookingId }
 bookingRouter.post("/release", releaseBooking);
 
 // Confirm a booking after payment. Body: { bookingId }
-bookingRouter.post("/confirm", confirmBooking);
+bookingRouter.post("/confirm-booking", confirmBooking);
 
 bookingRouter.get("/:bookingId/ticket", downloadTicketPdf);
 
@@ -44,7 +54,5 @@ bookingRouter.get("/seats/:showId", getSeatsForShow);
 
 // Get booking by id (used by review page / frontend)
 bookingRouter.get("/:bookingId", getBooking);
-
-bookingRouter.post("/confirm-booking", confirmBooking);
 
 export default bookingRouter;

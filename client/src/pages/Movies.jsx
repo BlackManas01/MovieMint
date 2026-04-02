@@ -1,4 +1,4 @@
-// src/pages/Movies.jsx
+// pages/Movies.jsx - Displays all "Now in Theaters" movies in a grid layout with skeleton loading
 import React, { useEffect, useState } from "react";
 import MovieCard from "../components/MovieCard";
 import BlurCircle from "../components/BlurCircle";

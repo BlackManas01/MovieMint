@@ -1,3 +1,4 @@
+// pages/admin/ListShows.jsx - Calendar view of shows grouped by movie with per-date stats
 import { X } from "lucide-react";
 import {
     useCallback,

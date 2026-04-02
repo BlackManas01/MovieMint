@@ -1,4 +1,4 @@
-// src/pages/Home.jsx
+// pages/Home.jsx - Landing page with hero section, featured movies, and trailers
 import React from 'react'
 import HeroSection from '../components/HeroSection'
 import FeaturedSection from '../components/FeaturedSection'

@@ -1,3 +1,4 @@
+// App.jsx - Root component: defines all routes (public, user, admin) and layout structure
 import { SignIn } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
 import { Route, Routes, useLocation } from 'react-router-dom'
@@ -23,6 +24,7 @@ import PaymentSuccess from './pages/PaymentSuccess'
 
 const App = () => {
 
+  // Hide navbar/footer on admin routes (admin has its own layout)
   const isAdminRoute = useLocation().pathname.startsWith('/admin')
 
   const { user } = useAppContext()

@@ -1,3 +1,4 @@
+// pages/admin/Layout.jsx - Admin layout wrapper with sidebar, navbar, and route outlet
 import React, { useEffect } from 'react'
 import AdminNavbar from '../../components/admin/AdminNavbar'
 import AdminSidebar from '../../components/admin/AdminSidebar'

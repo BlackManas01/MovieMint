@@ -1,3 +1,4 @@
+// components/MyBookingSkeleton.jsx - Animated placeholder for booking cards while loading
 const MyBookingSkeleton = () => {
     return (
         <div className="flex flex-col md:flex-row justify-between border border-white/6 rounded-lg p-4 max-w-4xl bg-white/5 animate-pulse">

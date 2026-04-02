@@ -1,3 +1,4 @@
+// components/TrailersSection.jsx - YouTube trailer carousel with play/pause functionality
 import React, { useEffect, useState, useCallback } from "react";
 import ReactPlayer from "react-player";
 import { PlayCircleIcon, ChevronLeft, ChevronRight } from "lucide-react";

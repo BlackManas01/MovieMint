@@ -1,3 +1,4 @@
+// pages/Favorite.jsx - Displays the user's saved favorite movies
 import React from 'react'
 import MovieCard from '../components/MovieCard'
 import BlurCircle from '../components/BlurCircle'

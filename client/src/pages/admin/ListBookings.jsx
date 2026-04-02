@@ -1,3 +1,4 @@
+// pages/admin/ListBookings.jsx - Admin view of all bookings with filters (status, date) and pagination
 import React, { useEffect, useState } from "react";
 import Loading from "../../components/Loading"; // fallback (optional)
 import Title from "../../components/admin/Title";

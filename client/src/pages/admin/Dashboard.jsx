@@ -1,3 +1,4 @@
+// pages/admin/Dashboard.jsx - Admin dashboard with stats (bookings, revenue, users) and today's shows
 import {
     ChartLineIcon,
     CircleDollarSignIcon,
