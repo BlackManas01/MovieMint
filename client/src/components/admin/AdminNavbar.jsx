@@ -2,7 +2,6 @@
 import React from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { LayoutDashboardIcon, ListIcon, ListCollapseIcon, TicketIcon, Trash2Icon } from 'lucide-react'
-import ThemeToggle from '../ThemeToggle'
 
 const links = [
   { name: 'Dashboard', path: '/admin', icon: LayoutDashboardIcon },
@@ -47,7 +46,6 @@ const AdminNavbar = () => {
 
         {/* Right: action */}
         <div className="flex-1 flex justify-end items-center gap-3">
-          <ThemeToggle />
           <Link to="/" className="group inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-violet-300 transition whitespace-nowrap">
             <span className="transition-transform group-hover:-translate-x-0.5">←</span> Back to site
           </Link>

@@ -3,8 +3,6 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MenuIcon, TicketPlus, XIcon, SearchIcon } from "lucide-react";
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
-import { useAppContext } from "../context/AppContext";
-import ThemeToggle from "./ThemeToggle";
 import CitySelector from "./CitySelector";
 import SearchOverlay from "./SearchOverlay";
 
@@ -15,7 +13,6 @@ const Navbar = () => {
   const { openSignIn } = useClerk();
   const navigate = useNavigate();
   const location = useLocation();
-  const { favoriteMovies } = useAppContext();
 
   // The home page opens with a full-screen dark hero. The navbar floats
   // transparently over the WHOLE hero (white chrome). Once scrolled past the
@@ -99,15 +96,25 @@ const Navbar = () => {
           Movies
         </Link>
 
-        {favoriteMovies.length > 0 && (
+        <Link
+          onClick={() => {
+            scrollTo(0, 0);
+            setIsOpen(false);
+          }}
+          to="/favorite"
+        >
+          Favorites
+        </Link>
+
+        {user && (
           <Link
             onClick={() => {
               scrollTo(0, 0);
               setIsOpen(false);
             }}
-            to="/favorite"
+            to="/my-bookings"
           >
-            Favorites
+            My Bookings
           </Link>
         )}
       </div>
@@ -126,7 +133,6 @@ const Navbar = () => {
         >
           <SearchIcon className="w-[18px] h-[18px]" />
         </button>
-        <ThemeToggle onDark={overHero} />
         {!user ? (
           <button
             onClick={openSignIn}

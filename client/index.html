@@ -7,15 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MovieMint</title>
   <script>
-    // No-flash theme init: applies saved/system theme class before first paint.
+    // App is dark-only: always apply the dark theme before first paint.
     (function () {
       try {
-        var saved = localStorage.getItem('theme');
-        var theme = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-        document.documentElement.classList.add(theme);
-      } catch (e) {
-        document.documentElement.classList.add('dark');
-      }
+        localStorage.setItem('theme', 'dark');
+      } catch (e) { /* ignore */ }
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
     })();
   </script>
 </head>
