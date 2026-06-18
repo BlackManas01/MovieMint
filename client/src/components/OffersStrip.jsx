@@ -1,5 +1,6 @@
 // components/OffersStrip.jsx - Horizontally scrollable promotional offers (home page)
 import React from "react";
+import HScroller from "./HScroller";
 import { TicketPercent, CreditCard, Popcorn, CalendarHeart } from "lucide-react";
 
 const OFFERS = [
@@ -39,8 +40,8 @@ const OffersStrip = () => {
       <div className="flex items-center justify-between mb-5">
         <p className="text-shade font-semibold text-2xl">Offers for you</p>
       </div>
-      <div className="relative">
-        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 pr-10">
+      <HScroller>
+        <div className="flex gap-4 w-max pb-2 px-1">
           {OFFERS.map((o) => (
             <div
               key={o.title}
@@ -54,9 +55,7 @@ const OffersStrip = () => {
             </div>
           ))}
         </div>
-        {/* Scroll hint */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-12 fade-right-edge" />
-      </div>
+      </HScroller>
     </section>
   );
 };

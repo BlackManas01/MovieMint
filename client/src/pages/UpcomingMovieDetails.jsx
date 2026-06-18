@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StarIcon, PlayCircleIcon, XCircle } from "lucide-react";
 import Loading from "../components/Loading";
+import HScroller from "../components/HScroller";
 import { useAppContext } from "../context/AppContext";
 import timeFormat from "../lib/timeFormat";
 import MovieCardSkeleton from "../components/MovieCardSkeleton";
@@ -150,7 +151,8 @@ const UpcomingMovieDetails = () => {
             {movie.casts?.length > 0 && (
                 <>
                     <p className="text-lg font-medium mt-20 mb-3">Cast</p>
-                    <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
+                    <HScroller>
+                      <div className="flex gap-4 w-max pb-4 px-1">
                         {movie.casts.slice(0, 10).map((c, i) => (
                             <div key={i} className="text-center shrink-0">
                                 {c.profile_path ? (
@@ -165,7 +167,8 @@ const UpcomingMovieDetails = () => {
                                 <p className="text-xs text-gray-300 mt-2">{c.name}</p>
                             </div>
                         ))}
-                    </div>
+                      </div>
+                    </HScroller>
                 </>
             )}
 
@@ -173,7 +176,8 @@ const UpcomingMovieDetails = () => {
             {movie.images?.backdrops?.length > 0 && (
                 <>
                     <p className="text-lg font-medium mt-14 mb-2">Gallery</p>
-                    <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 mb-10">
+                    <HScroller className="mb-10">
+                      <div className="flex gap-4 w-max pb-2 px-1">
                         {movie.images.backdrops.slice(0, 4).map((img, i) => (
                             <img
                                 key={i}
@@ -182,7 +186,8 @@ const UpcomingMovieDetails = () => {
                                 alt="gallery"
                             />
                         ))}
-                    </div>
+                      </div>
+                    </HScroller>
                 </>
             )}
         </div>
