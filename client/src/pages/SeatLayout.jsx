@@ -421,9 +421,17 @@ const SeatLayout = () => {
     return Array.isArray(serverOccupied) ? serverOccupied : [];
   }, [serverOccupied]);
 
+  // True while the user has an unpaid seat hold (must pay or release before booking more).
+  const isHoldActive = () => {
+    if (!tempHold || !(tempHold.seats?.length > 0)) return false;
+    const exp = tempHold.expiresAt ? new Date(tempHold.expiresAt).getTime() : NaN;
+    return Number.isNaN(exp) || exp > Date.now();
+  };
+
   /* seat click */
   const handleSeatClick = (seatId) => {
     if (!selectedTimeSlot) return toast("Please select a time first");
+    if (isHoldActive()) return toast.error("You already have seats on hold — pay or release them first");
     if (serverConfirmedOccupied.includes(seatId))
       return toast("This seat is already booked");
 
@@ -445,6 +453,10 @@ const SeatLayout = () => {
   /* ---------- create a client-side booking object and navigate to review ---------- */
   const bookTickets = async () => {
     if (navLoading) return;
+    if (isHoldActive()) {
+      toast.error("You already have seats on hold — pay or release them first");
+      return;
+    }
     // Must be signed in to book — prompt sign-in instead of failing the API call.
     if (!user) {
       toast.error("Please log in to continue");
@@ -758,7 +770,7 @@ const SeatLayout = () => {
       {/* Back button */}
       <div className="w-full max-w-4xl mb-3">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(`/movies/${id}`)}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 hover:text-white transition cursor-pointer"
         >
           <ArrowLeftIcon className="w-4 h-4" /> Back
@@ -926,7 +938,7 @@ const SeatLayout = () => {
         {/* (replaced by sticky bottom checkout bar) */}
 
         {/* sticky bottom checkout bar */}
-        <div className={`fixed bottom-0 left-0 w-full z-40 transition-all duration-300 ${selectedSeats.length ? "translate-y-0" : "translate-y-full pointer-events-none"}`} aria-hidden={!selectedSeats.length}>
+        <div className={`fixed bottom-0 left-0 w-full z-40 transition-all duration-300 ${selectedSeats.length && !isHoldActive() ? "translate-y-0" : "translate-y-full pointer-events-none"}`} aria-hidden={!selectedSeats.length || isHoldActive()}>
           <div className="mx-auto max-w-5xl m-4 rounded-2xl border border-primary/25 bg-black/80 backdrop-blur-xl shadow-[0_-10px_60px_-20px_rgba(168,85,247,0.6)] px-5 py-4 flex items-center justify-between gap-4">
             <div className="min-w-0">
               <div className="text-[11px] uppercase tracking-[0.2em] text-gray-400">Selected Seats</div>
