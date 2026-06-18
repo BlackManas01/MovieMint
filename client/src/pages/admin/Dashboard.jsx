@@ -497,7 +497,7 @@ const Dashboard = () => {
                             )}
 
                             {/* Theaters + showtimes */}
-                            <div className="overflow-y-auto overscroll-contain p-5 space-y-4">
+                            <div className="overflow-y-auto modal-scroll p-5 space-y-4">
                                 {visibleTheaters.length === 0 ? (
                                     <p className="text-sm text-gray-400">No showtimes for this filter.</p>
                                 ) : (
