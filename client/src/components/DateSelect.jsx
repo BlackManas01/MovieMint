@@ -201,7 +201,7 @@ const DateSelect = ({ dateTime, onDateChange }) => {
               }
             `}
           >
-            <ChevronLeft className="w-4 h-4 animate-nudge-x-rev" />
+            <ChevronLeft className="w-4 h-4 arrow-ico" />
           </button>
 
           {/* DATES STRIP */}
@@ -259,7 +259,7 @@ const DateSelect = ({ dateTime, onDateChange }) => {
               }
             `}
           >
-            <ChevronRight className="w-4 h-4 animate-nudge-x" />
+            <ChevronRight className="w-4 h-4 arrow-ico" />
           </button>
         </div>
       </div>

@@ -227,13 +227,13 @@ const HeroSection = () => {
             onClick={handlePrev}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
-            className="hidden md:flex items-center justify-center
+            className="arrow-hover-l hidden md:flex items-center justify-center
                        w-10 h-10 rounded-full cursor-pointer
                        bg-gray-800/70 hover:bg-primary hover:text-black
                        transition duration-200 
                        absolute left-6 top-1/2 -translate-y-1/2 text-white"
           >
-            <ChevronLeft className="w-6 h-6 animate-nudge-x-rev" />
+            <ChevronLeft className="w-6 h-6 arrow-ico" />
           </button>
 
           {/* Right arrow */}
@@ -241,13 +241,13 @@ const HeroSection = () => {
             onClick={handleNext}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
-            className="hidden md:flex items-center justify-center
+            className="arrow-hover-r hidden md:flex items-center justify-center
                        w-10 h-10 rounded-full cursor-pointer
                        bg-gray-800/70 hover:bg-primary hover:text-black
                        transition duration-200 
                        absolute right-6 top-1/2 -translate-y-1/2 text-white"
           >
-            <ChevronRight className="w-6 h-6 animate-nudge-x" />
+            <ChevronRight className="w-6 h-6 arrow-ico" />
           </button>
         </>
       )}

@@ -189,12 +189,12 @@ const TrailersSection = () => {
         {/* Left arrow */}
         <button
           onClick={handlePrev}
-          className="absolute left-[-50px] top-1/2 -translate-y-1/2
+          className="arrow-hover-l absolute left-[-50px] top-1/2 -translate-y-1/2
                      p-2.5 rounded-full bg-gray-800 hover:bg-primary hover:text-black z-50 
                      transition cursor-pointer disabled:opacity-30"
           disabled={trailers.length <= 1}
         >
-          <ChevronLeft className="w-6 h-6 animate-nudge-x-rev" />
+          <ChevronLeft className="w-6 h-6 arrow-ico" />
         </button>
 
         {/* Thumbnails */}
@@ -246,12 +246,12 @@ const TrailersSection = () => {
         {/* Right arrow */}
         <button
           onClick={handleNext}
-          className="absolute right-[-50px] top-1/2 -translate-y-1/2
+          className="arrow-hover-r absolute right-[-50px] top-1/2 -translate-y-1/2
                      p-2.5 rounded-full bg-gray-800 hover:bg-primary hover:text-black z-50 
                      transition cursor-pointer disabled:opacity-30"
           disabled={trailers.length <= 1}
         >
-          <ChevronRight className="w-6 h-6 animate-nudge-x" />
+          <ChevronRight className="w-6 h-6 arrow-ico" />
         </button>
       </div>
     </section>
