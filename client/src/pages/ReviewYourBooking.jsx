@@ -19,6 +19,8 @@ const LS = {
     TEMP_HOLD: (movieId, date, showId) => `tempHold:${movieId}:${date}:${showId}`,
 };
 
+const CURRENCY = import.meta.env.VITE_CURRENCY || "₹";
+
 const formatCountdown = (ms) => {
     if (ms <= 0) return "00:00";
     const s = Math.floor(ms / 1000);
@@ -357,7 +359,7 @@ const ReviewYourBooking = () => {
 
                                     <div className="flex flex-col">
                                         <div className="text-xs text-gray-300">Amount</div>
-                                        <div className="mt-1 text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-fuchsia-300 to-primary bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(192,132,252,0.35)]">{amountValue !== null ? `$ ${amountValue}` : "—"}</div>
+                                        <div className="mt-1 text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-fuchsia-300 to-primary bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(192,132,252,0.35)]">{amountValue !== null ? `${CURRENCY} ${amountValue}` : "—"}</div>
                                     </div>
                                 </div>
 
@@ -379,13 +381,13 @@ const ReviewYourBooking = () => {
                                     const Row = ({ label, val, bold }) => (
                                         <div className={`flex items-center justify-between py-1 text-sm ${bold ? "font-semibold text-white" : "text-gray-300"}`}>
                                             <span>{label}</span>
-                                            <span>$ {val.toFixed(2)}</span>
+                                            <span>{CURRENCY} {val.toFixed(2)}</span>
                                         </div>
                                     );
                                     return (
                                         <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] p-4 max-w-md">
                                             <div className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Price details</div>
-                                            <Row label={`Ticket(s) (${seatCount} × $ ${(sub / seatCount).toFixed(2)})`} val={sub} />
+                                            <Row label={`Ticket(s) (${seatCount} × ${CURRENCY} ${(sub / seatCount).toFixed(2)})`} val={sub} />
                                             {snacks > 0 && <Row label="Snacks & beverages" val={snacks} />}
                                             <Row label="Convenience fee (incl. GST)" val={conv} />
                                             <div className="my-2 border-t border-white/10" />

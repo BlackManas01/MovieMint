@@ -12,7 +12,7 @@ const TEMP_HOLD_PREFIX = "tempHold:";
 const TEN_MINUTES_MS = 10 * 60 * 1000;
 
 const MyBookings = () => {
-  const currency = import.meta.env.VITE_CURRENCY || "$";
+  const currency = import.meta.env.VITE_CURRENCY || "₹";
   const { axios, getToken, user, image_base_url } = useAppContext();
   const navigate = useNavigate();
   const API_BASE =

@@ -52,8 +52,8 @@ const getExperienceLayout = (experience, basePrice) => {
     seatsPerRow: 12,
     sections: [
       { key: "executive", label: "EXECUTIVE", price: bp + 0, rows: sliceRows(0, 2), colorClass: colors.executive },
-      { key: "club", label: "CLUB", price: bp + 5, rows: sliceRows(2, 8), colorClass: colors.club },
-      { key: "royale", label: "ROYALE", price: bp + 10, rows: sliceRows(10, 2), colorClass: colors.royale },
+      { key: "club", label: "CLUB", price: bp + 50, rows: sliceRows(2, 8), colorClass: colors.club },
+      { key: "royale", label: "ROYALE", price: bp + 100, rows: sliceRows(10, 2), colorClass: colors.royale },
     ],
   };
 
@@ -65,8 +65,8 @@ const getExperienceLayout = (experience, basePrice) => {
       seatsPerRow: 12,
       sections: [
         { key: "executive", label: "EXECUTIVE", price: bp + 0, rows: sliceRows(0, 2), colorClass: colors.executive },
-        { key: "club", label: "CLUB", price: bp + 5, rows: sliceRows(2, 6), colorClass: colors.club },
-        { key: "royale", label: "ROYALE", price: bp + 10, rows: sliceRows(8, 4), colorClass: colors.royale },
+        { key: "club", label: "CLUB", price: bp + 50, rows: sliceRows(2, 6), colorClass: colors.club },
+        { key: "royale", label: "ROYALE", price: bp + 100, rows: sliceRows(8, 4), colorClass: colors.royale },
       ],
     };
   }
@@ -76,8 +76,8 @@ const getExperienceLayout = (experience, basePrice) => {
       seatsPerRow: 12,
       sections: [
         { key: "executive", label: "EXECUTIVE", price: bp + 0, rows: sliceRows(0, 2), colorClass: colors.executive },
-        { key: "club", label: "CLUB", price: bp + 5, rows: sliceRows(2, 6), colorClass: colors.club },
-        { key: "royale", label: "ROYALE", price: bp + 10, rows: sliceRows(8, 4), colorClass: colors.royale },
+        { key: "club", label: "CLUB", price: bp + 50, rows: sliceRows(2, 6), colorClass: colors.club },
+        { key: "royale", label: "ROYALE", price: bp + 100, rows: sliceRows(8, 4), colorClass: colors.royale },
       ],
     };
   }
@@ -85,14 +85,14 @@ const getExperienceLayout = (experience, basePrice) => {
   if (exp.includes("insignia")) {
     return {
       seatsPerRow: 10,
-      sections: [{ key: "insignia", label: "INSIGNIA", price: bp + 20, rows: sliceRows(0, 6), colorClass: colors.insignia }],
+      sections: [{ key: "insignia", label: "INSIGNIA", price: bp + 120, rows: sliceRows(0, 6), colorClass: colors.insignia }],
     };
   }
 
   if (exp.includes("4dx") || exp.includes("4dx-3d")) {
     return {
       seatsPerRow: 10,
-      sections: [{ key: "prime", label: "PRIME", price: bp + 30, rows: sliceRows(0, 6), colorClass: colors.prime }],
+      sections: [{ key: "prime", label: "PRIME", price: bp + 150, rows: sliceRows(0, 6), colorClass: colors.prime }],
     };
   }
 

@@ -34,7 +34,7 @@ const movieSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        defaultShowPrice: { type: Number, default: 29 },            // Fallback price per ticket
+        defaultShowPrice: { type: Number, default: 180 },            // Fallback price per ticket
     },
     { timestamps: true }
 );

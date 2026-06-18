@@ -114,10 +114,10 @@ const EXPERIENCES = EXPERIENCE_FORMAT_PAIRS.map(p => p.experience);
 
 // Some sensible defaults (fallback)
 const FORMAT_DEFAULT_PRICES = {
-    "2D": 19,
-    "3D": 29,
-    "IMAX 2D": 39,
-    "4DX-3D": 59,
+    "2D": 180,
+    "3D": 230,
+    "IMAX 2D": 400,
+    "4DX-3D": 550,
 };
 
 const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];

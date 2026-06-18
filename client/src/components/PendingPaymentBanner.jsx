@@ -7,7 +7,7 @@ import isoTimeFormat from "../lib/isoTimeFormat";
 import toast from "react-hot-toast";
 
 const TEN_MIN = 10 * 60 * 1000;
-const CURRENCY = import.meta.env.VITE_CURRENCY || "$";
+const CURRENCY = import.meta.env.VITE_CURRENCY || "₹";
 
 // Routes that already surface their own pending UI (avoid duplicates)
 const isHiddenRoute = (pathname) =>

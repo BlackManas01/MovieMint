@@ -22,19 +22,19 @@ const sectionsForExperience = (experience, bp) => {
     const exp = (experience || "").toLowerCase();
     const laser = [
         { rows: sliceRows(0, 2), price: bp + 0 },
-        { rows: sliceRows(2, 8), price: bp + 5 },
-        { rows: sliceRows(10, 2), price: bp + 10 },
+        { rows: sliceRows(2, 8), price: bp + 50 },
+        { rows: sliceRows(10, 2), price: bp + 100 },
     ];
     if (!exp) return laser;
     if (exp.includes("imax") || exp.includes("dolby")) {
         return [
             { rows: sliceRows(0, 2), price: bp + 0 },
-            { rows: sliceRows(2, 6), price: bp + 5 },
-            { rows: sliceRows(8, 4), price: bp + 10 },
+            { rows: sliceRows(2, 6), price: bp + 50 },
+            { rows: sliceRows(8, 4), price: bp + 100 },
         ];
     }
-    if (exp.includes("insignia")) return [{ rows: sliceRows(0, 6), price: bp + 20 }];
-    if (exp.includes("4dx")) return [{ rows: sliceRows(0, 6), price: bp + 30 }];
+    if (exp.includes("insignia")) return [{ rows: sliceRows(0, 6), price: bp + 120 }];
+    if (exp.includes("4dx")) return [{ rows: sliceRows(0, 6), price: bp + 150 }];
     return laser;
 };
 
