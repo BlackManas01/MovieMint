@@ -697,6 +697,16 @@ const ShowDetails = () => {
             return;
         }
 
+        // Block adding shows whose start time has already passed.
+        const nowMs = Date.now();
+        const pastTimes = times.filter(
+            (t) => new Date(`${date}T${t}:00`).getTime() <= nowMs
+        );
+        if (pastTimes.length) {
+            toast.error(`Can't add past show time(s): ${pastTimes.join(", ")}`);
+            return;
+        }
+
         const priceNum = Number(price);
         if (!Number.isFinite(priceNum) || priceNum <= 0) {
             toast.error("Please enter a valid positive price.");
@@ -929,7 +939,7 @@ const ShowDetails = () => {
                       cursor-pointer border
                       ${isMovieHidden
                                                 ? "border-violet-400 text-violet-300 bg-violet-900/30 hover:bg-violet-900/50"
-                                                : "border-amber-400 text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
+                                                : "border-white/20 text-gray-200 bg-white/5 hover:bg-white/10"
                                             }
                     `}
                                     >
@@ -1097,7 +1107,7 @@ const ShowDetails = () => {
                                 text-[11px] px-3 py-1 rounded-md cursor-pointer border
                                 ${isDayAllHidden
                                                                     ? "border-violet-400 text-violet-300 bg-violet-900/30 hover:bg-violet-900/50"
-                                                                    : "border-amber-400 text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
+                                                                    : "border-white/20 text-gray-200 bg-white/5 hover:bg-white/10"
                                                                 }
                               `}
                                                         >
@@ -1175,7 +1185,7 @@ const ShowDetails = () => {
                                         text-[11px] px-3 py-1 rounded-md cursor-pointer border
                                         ${allHiddenForTheater
                                                                                     ? "border-violet-400 text-violet-300 bg-violet-900/30 hover:bg-violet-900/50"
-                                                                                    : "border-amber-400 text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
+                                                                                    : "border-white/20 text-gray-200 bg-white/5 hover:bg-white/10"
                                                                                 }
                                       `}
                                                                         >
@@ -1207,7 +1217,7 @@ const ShowDetails = () => {
                                                                                     "opacity-60 border-white/20 bg-black/40";
                                                                             } else if (status === "soon") {
                                                                                 statusClasses =
-                                                                                    "border-yellow-400 bg-yellow-950/40";
+                                                                                    "border-primary bg-primary/15";
                                                                             } else if (status === "upcoming") {
                                                                                 statusClasses =
                                                                                     "border-violet-400 bg-violet-950/30";
@@ -1249,7 +1259,7 @@ const ShowDetails = () => {
                                                                                         )}
                                                                                         {!slot.hidden &&
                                                                                             status === "past" && (
-                                                                                                <span className="text-[10px] text-amber-300 mt-0.5">
+                                                                                                <span className="text-[10px] text-gray-400 mt-0.5">
                                                                                                     Show time passed
                                                                                                 </span>
                                                                                             )}
@@ -1257,7 +1267,7 @@ const ShowDetails = () => {
                                                                                             status === "soon" &&
                                                                                             mins !== null &&
                                                                                             mins >= 0 && (
-                                                                                                <span className="text-[10px] text-yellow-300 mt-0.5">
+                                                                                                <span className="text-[10px] text-primary mt-0.5">
                                                                                                     Starts in {mins} min
                                                                                                     {mins !== 1 ? "s" : ""}
                                                                                                 </span>
@@ -1415,7 +1425,7 @@ const ShowDetails = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => removeTimeFromList(t)}
-                                                            className="hover:text-amber-300"
+                                                            className="hover:text-primary"
                                                         >
                                                             ×
                                                         </button>
