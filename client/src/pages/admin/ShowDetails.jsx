@@ -981,33 +981,28 @@ const ShowDetails = () => {
                                                 {formatPrices.map((fp) => (
                                                     <div
                                                         key={fp.format}
-                                                        className="
-                              rounded-lg border border-white/12 bg-black/50 
-                              px-3 py-2.5 flex flex-col gap-1
-                            "
+                                                        className="group rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] px-3.5 py-3 transition hover:border-primary/40 hover:shadow-[0_14px_40px_-24px_rgba(168,85,247,0.9)]"
                                                     >
-                                                        <p className="text-xs font-semibold text-gray-100">
-                                                            {fp.format}
-                                                        </p>
-                                                        <p className="text-[11px] text-gray-500">
-                                                            Base price ({currency})
-                                                        </p>
-                                                        <input
-                                                            type="number"
-                                                            min="1"
-                                                            className="
-                                mt-1 w-full rounded-md bg-black/60 border border-white/15 
-                                text-xs text-gray-100 px-2 py-1 outline-none
-                                focus:border-primary
-                              "
-                                                            value={fp.price === "" ? "" : fp.price}
-                                                            onChange={(e) =>
-                                                                handleFormatPriceChange(
-                                                                    fp.format,
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
+                                                        <div className="flex items-center justify-between">
+                                                            <p className="text-xs font-semibold text-gray-100">{fp.format}</p>
+                                                            <span className="h-2 w-2 rounded-full bg-primary/70 shadow-[0_0_10px_-1px_rgba(168,85,247,0.9)]" />
+                                                        </div>
+                                                        <p className="text-[10px] uppercase tracking-wide text-gray-500 mt-1">Base price</p>
+                                                        <div className="mt-1.5 flex items-center rounded-lg bg-black/60 border border-white/15 focus-within:border-primary transition px-2">
+                                                            <span className="text-xs text-gray-400 pr-1">{currency}</span>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                className="w-full bg-transparent text-sm font-semibold text-gray-100 py-1.5 outline-none"
+                                                                value={fp.price === "" ? "" : fp.price}
+                                                                onChange={(e) =>
+                                                                    handleFormatPriceChange(
+                                                                        fp.format,
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -1041,10 +1036,10 @@ const ShowDetails = () => {
                                                             onClick={() => setSelectedDayIndex(idx)}
                                                             className={`
                                 px-3 py-1.5 rounded-full text-xs whitespace-nowrap cursor-pointer
-                                border transition relative
+                                border transition-all relative
                                 ${isActive
-                                                                    ? "bg-violet-400 text-black border-violet-400"
-                                                                    : "bg-white/5 text-gray-300 border-white/15 hover:bg-white/10"
+                                                                    ? "bg-gradient-to-b from-violet-400 to-fuchsia-500 text-black border-violet-400 shadow-[0_8px_22px_-8px_rgba(167,139,250,0.95)] scale-105"
+                                                                    : "bg-white/5 text-gray-300 border-white/15 hover:border-violet-400/40 hover:bg-white/10"
                                                                 }
                               `}
                                                         >
@@ -1218,8 +1213,8 @@ const ShowDetails = () => {
                                                                                     key={slot._id}
                                                                                     className={`
                                             flex items-center justify-between
-                                            min-w-[5rem] px-2 py-1.5
-                                            rounded-md border text-[11px]
+                                            min-w-[5rem] px-2.5 py-2
+                                            rounded-xl border text-[11px] transition hover:-translate-y-0.5
                                             ${statusClasses}
                                           `}
                                                                                 >
@@ -1268,7 +1263,7 @@ const ShowDetails = () => {
                                                                                                 slot.hidden
                                                                                             )
                                                                                         }
-                                                                                        className="ml-2 inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md cursor-pointer bg-white/5 hover:bg-white/10"
+                                                                                        className={`ml-2 inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md cursor-pointer border transition ${slot.hidden ? "border-primary/30 text-primary hover:bg-primary/15" : "border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"}`}
                                                                                     >
                                                                                         {slot.hidden ? (
                                                                                             <>
