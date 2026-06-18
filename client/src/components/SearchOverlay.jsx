@@ -65,7 +65,7 @@ const SearchOverlay = ({ open, onClose }) => {
             <>
               {!q.trim() && (
                 <p className="px-3 py-2 text-[11px] uppercase tracking-wide text-gray-500">
-                  Now showing
+                  Now Showing
                 </p>
               )}
               {results.map((m) => (

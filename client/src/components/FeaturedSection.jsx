@@ -129,7 +129,7 @@ const FeaturedSection = () => {
     <section className="px-6 md:px-16 lg:px-24 xl:px-44 pt-24 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between w-full mb-10">
-        <p className="text-shade font-semibold text-2xl">Now in Theaters</p>
+        <p className="text-shade font-semibold text-2xl">Now Showing</p>
 
         <button
           onClick={() => navigate("/movies")}

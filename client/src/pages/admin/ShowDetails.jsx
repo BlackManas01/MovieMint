@@ -433,8 +433,8 @@ const ShowDetails = () => {
 
             toast.success(
                 nextHidden
-                    ? "Movie hidden from Now in Theaters."
-                    : "Movie visible on Now in Theaters."
+                    ? "Movie hidden from Now Showing."
+                    : "Movie visible on Now Showing."
             );
         } catch (err) {
             console.error("Toggle movie visibility error:", err);
@@ -779,7 +779,7 @@ const ShowDetails = () => {
             <Title text1="Show" text2="Details" />
 
             {/* Movie grid header */}
-            <p className="mt-10 text-xl font-semibold tracking-tight bg-gradient-to-r from-white to-violet-300/80 bg-clip-text text-transparent w-max">Now in Theaters</p>
+            <p className="mt-10 text-xl font-semibold tracking-tight bg-gradient-to-r from-white to-violet-300/80 bg-clip-text text-transparent w-max">Now Showing</p>
 
             {loadingMovies ? (
                 <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
@@ -795,7 +795,7 @@ const ShowDetails = () => {
                 </div>
             ) : movies.length === 0 ? (
                 <p className="mt-4 text-gray-400 text-sm">
-                    No movies found for the current &quot;Now in Theaters&quot; window.
+                    No movies found for the current &quot;Now Showing&quot; window.
                 </p>
             ) : (
                 <div className="mt-4">
@@ -946,8 +946,8 @@ const ShowDetails = () => {
                                         {movieVisibilityLoading
                                             ? "Updating..."
                                             : isMovieHidden
-                                                ? "Unhide movie from Now in Theaters"
-                                                : "Hide movie from Now in Theaters"}
+                                                ? "Unhide movie from Now Showing"
+                                                : "Hide movie from Now Showing"}
                                     </button>
                                 </div>
 
