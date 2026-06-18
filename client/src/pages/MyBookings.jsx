@@ -615,11 +615,11 @@ const MyBookings = () => {
                 <div
                   key={key}
                   onClick={() => onClickBookingCard(item)}
-                  className={`flex flex-col md:flex-row justify-between
-  border border-white/6 rounded-lg mt-4 p-4 max-w-4xl shadow-md
-  transition-transform duration-300
-  ${item.__expired ? "opacity-50 grayscale pointer-events-none" : ""}
-  ${isPaid ? "from-emerald-900/30" : "from-amber-900/30"} to-slate-800/60`}>
+                  className={`group relative overflow-hidden flex flex-col md:flex-row justify-between
+  rounded-2xl mt-4 p-4 max-w-4xl border transition-all duration-300 cursor-pointer
+  bg-gradient-to-br ${isPaid ? "from-primary/10 border-primary/20 hover:border-primary/40" : "from-amber-500/10 border-amber-500/25 hover:border-amber-400/45"} via-[#100b16]/80 to-black
+  shadow-[0_18px_50px_-30px_rgba(168,85,247,0.5)] hover:-translate-y-0.5
+  ${item.__expired ? "opacity-50 grayscale pointer-events-none" : ""}`}>
                   <div className="flex flex-col md:flex-row gap-4">
                     {safePoster(item) ? (
                       <img src={safePoster(item)} alt={safeTitle(item)} className="w-40 h-56 object-cover rounded-md shadow-sm" />
@@ -663,8 +663,8 @@ const MyBookings = () => {
                       </div>
 
                       {item.isPaid ? (
-                        <div className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
-                          PAID
+                        <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/30">
+                          ✓ PAID
                         </div>
                       ) : (
                         <div className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400">
@@ -685,7 +685,7 @@ const MyBookings = () => {
                             loading="lazy"
                           />
                           <div className="text-xs leading-relaxed">
-                            <div className="text-emerald-400 font-semibold">Ticket confirmed</div>
+                            <div className="text-primary font-semibold">Ticket confirmed</div>
                             <div className="text-gray-400">Scan at the entry gate</div>
                             <div className="text-gray-500 mt-0.5">
                               ID: {(item._id || item.id || "").toString().slice(-8).toUpperCase()}
@@ -726,7 +726,7 @@ const MyBookings = () => {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="px-4 py-1.5 rounded-full text-xs font-medium bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 transition"
+                              className="px-4 py-1.5 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 transition"
                             >
                               Download Ticket
                             </a>
@@ -760,6 +760,18 @@ const MyBookings = () => {
                               Add to calendar
                             </button>
                           )}
+
+                          {/* BOOK AGAIN */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const mId = item.show?.movie?._id || item.movie?._id || item.movieId;
+                              navigate(mId ? `/movies/${mId}` : "/movies");
+                            }}
+                            className="px-4 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 transition cursor-pointer"
+                          >
+                            Book again
+                          </button>
 
                           {item.__expired && (
                             <div className="text-xs text-red-400 mt-2">
