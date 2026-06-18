@@ -135,7 +135,7 @@ export const createBooking = async (req, res) => {
         );
 
         // Optional snacks & beverages add-on (validated, capped)
-        const snacksAmount = Math.max(0, Math.min(1000, Number(addonAmount) || 0));
+        const snacksAmount = Math.max(0, Math.min(10000, Number(addonAmount) || 0));
         const totalAmount = seatsAmount + snacksAmount;
 
         // create booking (pending)

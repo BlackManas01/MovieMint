@@ -7,13 +7,13 @@ const OFFERS = [
   {
     icon: TicketPercent,
     title: "50% OFF on Tuesdays",
-    sub: "Use code MOVIE50 · up to $5 off",
+    sub: "Use code MOVIE50 · up to ₹150 off",
     from: "from-violet-500/20",
     to: "to-fuchsia-500/10",
   },
   {
     icon: CreditCard,
-    title: "Extra $1 with UPI",
+    title: "Extra ₹50 off with UPI",
     sub: "On every ticket, all shows",
     from: "from-emerald-500/20",
     to: "to-teal-500/10",

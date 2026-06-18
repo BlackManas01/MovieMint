@@ -3,13 +3,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Popcorn, Plus, Minus, ChevronDown, Lock } from "lucide-react";
 
 const ITEMS = [
-  { id: "combo", name: "Large Popcorn + Pepsi", price: 12, emoji: "🍿" },
-  { id: "nachos", name: "Loaded Nachos", price: 8, emoji: "🧀" },
-  { id: "coke", name: "Soft Drink (500ml)", price: 4, emoji: "🥤" },
-  { id: "samosa", name: "Cheese Garlic Bread", price: 6, emoji: "🧄" },
+  { id: "combo", name: "Large Popcorn + Pepsi", price: 350, emoji: "🍿" },
+  { id: "nachos", name: "Loaded Nachos", price: 280, emoji: "🧀" },
+  { id: "coke", name: "Soft Drink (500ml)", price: 150, emoji: "🥤" },
+  { id: "samosa", name: "Cheese Garlic Bread", price: 220, emoji: "🧄" },
 ];
 
-const FoodAddon = ({ currency = "$", disabled = false, onTotalChange }) => {
+const FoodAddon = ({ currency = "₹", disabled = false, onTotalChange }) => {
   const [open, setOpen] = useState(false);
   const [qty, setQty] = useState({});
 

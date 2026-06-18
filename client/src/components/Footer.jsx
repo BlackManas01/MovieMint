@@ -95,7 +95,7 @@ const Footer = () => {
                             <h2 className="font-semibold mb-4 text-white">Get in touch</h2>
                             <div className="text-sm space-y-2 opacity-80">
                                 <p>
-                                    <a href="tel:+1234567890" className="hover:text-primary transition">+1 234 567 890</a>
+                                    <a href="tel:+919876543210" className="hover:text-primary transition">+91 98765 43210</a>
                                 </p>
                                 <p>
                                     <a href="mailto:support@moviemint.com" className="hover:text-primary transition">support@moviemint.com</a>

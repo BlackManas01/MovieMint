@@ -366,8 +366,8 @@ const ReviewYourBooking = () => {
                                 {/* Offers */}
                                 <div className="mt-5 flex flex-wrap items-center gap-2">
                                     <span className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mr-1">Offers</span>
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-amber-500/10 border border-amber-500/25 text-amber-300">🎟️ MOVIE50 · 50% off up to $5</span>
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/5 border border-white/10 text-gray-300">💳 Pay with UPI · extra $1 off</span>
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-amber-500/10 border border-amber-500/25 text-amber-300">🎟️ MOVIE50 · 50% off up to ₹150</span>
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/5 border border-white/10 text-gray-300">💳 Pay with UPI · extra ₹50 off</span>
                                 </div>
 
                                 {/* Price details breakup */}
