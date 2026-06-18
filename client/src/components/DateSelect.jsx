@@ -193,7 +193,7 @@ const DateSelect = ({ dateTime, onDateChange }) => {
           <button
             onClick={handlePrev}
             className={`
-              w-9 h-9 md:w-9 md:h-9 flex items-center justify-center 
+              arrow-hover-l w-9 h-9 md:w-9 md:h-9 flex items-center justify-center 
               rounded-full transition
               ${canSlideLeft || canMoveSelLeft
                 ? "bg-white/10 hover:bg-white/20 text-white shadow-md cursor-pointer"
@@ -251,7 +251,7 @@ const DateSelect = ({ dateTime, onDateChange }) => {
           <button
             onClick={handleNext}
             className={`
-              w-9 h-9 md:w-9 md:h-9 flex items-center justify-center 
+              arrow-hover-r w-9 h-9 md:w-9 md:h-9 flex items-center justify-center 
               rounded-full transition
               ${canSlideRight || canMoveSelRight
                 ? "bg-white/10 hover:bg-white/20 text-white shadow-md cursor-pointer"
