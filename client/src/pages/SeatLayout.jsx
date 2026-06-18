@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowRightIcon, ArrowLeftIcon, ClockIcon } from "lucide-react";
+import { useClerk } from "@clerk/clerk-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
 import { formatScreen } from "../lib/screenLabel";
 import BlurCircle from "../components/BlurCircle";
@@ -113,6 +114,7 @@ const SeatLayout = () => {
   const { search } = useLocation();
   const navigate = useNavigate();
   const { axios, getToken, user, image_base_url, city } = useAppContext();
+  const { openSignIn } = useClerk();
   const currency = import.meta.env.VITE_CURRENCY || "₹";
 
   // stable hooks
@@ -443,14 +445,22 @@ const SeatLayout = () => {
   /* ---------- create a client-side booking object and navigate to review ---------- */
   const bookTickets = async () => {
     if (navLoading) return;
+    // Must be signed in to book — prompt sign-in instead of failing the API call.
+    if (!user) {
+      toast.error("Please log in to continue");
+      openSignIn();
+      return;
+    }
     setNavLoading(true);
     try {
       if (!selectedTimeSlot) {
         toast.error("Please select a time and seats");
+        setNavLoading(false);
         return;
       }
       if (!selectedSeats.length) {
         toast.error("Please select seats");
+        setNavLoading(false);
         return;
       }
 
@@ -480,6 +490,7 @@ const SeatLayout = () => {
 
       if (!data?.success || !data?.bookingId) {
         toast.error("Failed to create booking");
+        setNavLoading(false);
         return;
       }
 
