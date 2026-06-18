@@ -5,7 +5,8 @@ import Loading from "../components/Loading";
 import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 import isoTimeFormat from "../lib/isoTimeFormat";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
+import BlurCircle from "../components/BlurCircle";
 
 /**
  * ReviewYourBooking (styling updated: vertically centered)
@@ -280,9 +281,11 @@ const ReviewYourBooking = () => {
     const amountValue = booking.amount ?? booking.total ?? null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-black to-[#0b0910] p-6 flex items-center">
+        <div className="relative min-h-screen bg-gradient-to-b from-black via-[#0b0910] to-black p-6 flex items-center overflow-hidden">
+            <BlurCircle top="-80px" left="-80px" />
+            <BlurCircle bottom="-60px" right="-40px" />
             {/* container centered vertically (so card appears in the middle of the viewport) */}
-            <div className="w-full max-w-5xl mx-auto">
+            <div className="relative w-full max-w-5xl mx-auto">
                 {/* Top small title bar (kept, but moved visually above the centered card) */}
                 <div className="flex items-center gap-4 mb-6">
                     <button
@@ -300,12 +303,12 @@ const ReviewYourBooking = () => {
                 </div>
 
                 {/* Movie / details card (stylish) */}
-                <div className="bg-gradient-to-br from-[#18121f] via-[#100b16] to-black rounded-2xl p-6 shadow-2xl border border-primary/15">
+                <div className="relative bg-gradient-to-br from-[#1b1426] via-[#100b16] to-black rounded-2xl p-6 shadow-[0_30px_80px_-30px_rgba(168,85,247,0.45)] border border-primary/20">
                     <div className="flex flex-col md:flex-row gap-6">
                         {/* Poster */}
                         <div className="w-full md:w-44 flex-shrink-0">
                             {posterUrl ? (
-                                <img src={posterUrl} alt={movie.title} className="w-full h-auto rounded-lg object-cover shadow-lg" />
+                                <img src={posterUrl} alt={movie.title} className="w-full h-auto rounded-xl object-cover shadow-2xl ring-1 ring-primary/25" />
                             ) : (
                                 <div className="w-full h-64 bg-white/6 rounded-lg flex items-center justify-center text-gray-400">No poster</div>
                             )}
@@ -343,12 +346,18 @@ const ReviewYourBooking = () => {
 
                                     <div>
                                         <div className="text-xs text-gray-300">Seats</div>
-                                        <div className="font-medium text-white mt-1">{(booking.seats || []).join(", ") || "None"}</div>
+                                        <div className="mt-1 flex flex-wrap gap-1.5">
+                                            {(booking.seats || []).length
+                                                ? booking.seats.map((s) => (
+                                                    <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/15 text-primary border border-primary/30">{s}</span>
+                                                ))
+                                                : <span className="text-gray-400">None</span>}
+                                        </div>
                                     </div>
 
                                     <div className="flex flex-col">
                                         <div className="text-xs text-gray-300">Amount</div>
-                                        <div className="text-2xl md:text-3xl font-extrabold text-emerald-400 mt-1">{amountValue !== null ? `$ ${amountValue}` : "—"}</div>
+                                        <div className="mt-1 text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-fuchsia-300 to-primary bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(192,132,252,0.35)]">{amountValue !== null ? `$ ${amountValue}` : "—"}</div>
                                     </div>
                                 </div>
 
@@ -398,9 +407,10 @@ const ReviewYourBooking = () => {
                                     <button
                                         onClick={handlePayNow}
                                         disabled={payLoading}
-                                        className={`px-6 py-3 rounded-full cursor-pointer text-white font-semibold shadow-lg transform transition-all ${payLoading ? "opacity-80 cursor-wait bg-emerald-500" : "bg-emerald-500 hover:scale-[1.02] hover:shadow-2xl"}`}
+                                        className={`group inline-flex items-center gap-2 px-7 py-3 rounded-full cursor-pointer text-black font-semibold transition-all ${payLoading ? "opacity-80 cursor-wait bg-primary" : "bg-gradient-to-b from-primary to-primary-dull shadow-[0_14px_36px_-10px_rgba(168,85,247,0.9)] hover:scale-[1.03] hover:shadow-[0_18px_44px_-10px_rgba(168,85,247,1)]"}`}
                                     >
                                         {payLoading ? "Preparing…" : "Pay now"}
+                                        {!payLoading && <ArrowRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />}
                                     </button>
                                 </div>
                             </div>
