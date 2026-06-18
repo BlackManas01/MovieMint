@@ -26,13 +26,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Validate required environment variables at startup (fail fast if missing)
-const requiredEnvVars = ['MONGODB_URI', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_USER', 'SMTP_PASS', 'SENDER_EMAIL', 'CLIENT_URL'];
+const requiredEnvVars = ['MONGODB_URI', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_USER', 'SMTP_PASS', 'SENDER_EMAIL'];
 for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
         console.error(`Missing required environment variable: ${envVar}`);
         process.exit(1);
     }
 }
+
+// Client origin used for CORS. Falls back to the deployed client if unset.
+const CLIENT_URL = process.env.CLIENT_URL || 'https://moviemint-client.vercel.app';
 
 await connectDB()
 
@@ -41,7 +44,7 @@ app.use('/api/stripe', express.raw({ type: 'application/json' }), stripeWebhooks
 
 // Middleware
 app.use(express.json({ limit: '10kb' }))
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
+app.use(cors({ origin: CLIENT_URL, credentials: true }))
 app.use(clerkMiddleware())
 
 
