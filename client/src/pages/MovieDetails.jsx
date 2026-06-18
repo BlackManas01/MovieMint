@@ -189,6 +189,8 @@ const MovieDetails = () => {
     daySlots.forEach((slot) => {
       // Ignore any slot that does not have a valid theater name.
       if (!slot.theaterName) return;
+      // Skip shows that have already started / passed — customers can't book them.
+      if (new Date(slot.time).getTime() <= Date.now()) return;
       // City filter — only show theaters in the selected city.
       if (city && slot.theaterCity && slot.theaterCity !== city) return;
       // Language filter.

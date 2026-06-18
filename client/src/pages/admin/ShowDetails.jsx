@@ -1266,12 +1266,15 @@ const ShowDetails = () => {
 
                                                                                     <button
                                                                                         onClick={() =>
+                                                                                            status !== "past" &&
                                                                                             toggleSlotVisibility(
                                                                                                 slot._id,
                                                                                                 slot.hidden
                                                                                             )
                                                                                         }
-                                                                                        className={`ml-2 inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md cursor-pointer border transition ${slot.hidden ? "border-primary/30 text-primary hover:bg-primary/15" : "border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"}`}
+                                                                                        disabled={status === "past"}
+                                                                                        title={status === "past" ? "This show time has already passed" : undefined}
+                                                                                        className={`ml-2 inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border transition ${status === "past" ? "border-white/10 text-gray-600 opacity-60 cursor-not-allowed" : slot.hidden ? "border-primary/30 text-primary hover:bg-primary/15 cursor-pointer" : "border-white/10 text-gray-300 hover:bg-white/10 hover:text-white cursor-pointer"}`}
                                                                                     >
                                                                                         {slot.hidden ? (
                                                                                             <>
