@@ -187,7 +187,7 @@ const ReviewYourBooking = () => {
             const releasedShowId = e.detail?.showId;
             if (releasedShowId && booking?.show?.showId === releasedShowId) {
                 toast("Seats were released");
-                navigate(-1);
+                navigate(booking?.movieId ? `/movies/${booking.movieId}` : "/my-bookings");
             }
         };
 
@@ -219,7 +219,7 @@ const ReviewYourBooking = () => {
     // Back handler: save temp-hold and navigate explicitly back to SeatLayout with showId/time query params
     const handleBackAndHold = () => {
         if (!booking) {
-            navigate(-1);
+            navigate("/my-bookings");
             return;
         }
 
@@ -249,7 +249,7 @@ const ReviewYourBooking = () => {
         }
 
         // 🔥 fallback (deep link / refresh case)
-        navigate(-1);
+        navigate("/my-bookings");
     };
 
     if (loading) return <Loading />;
@@ -261,7 +261,7 @@ const ReviewYourBooking = () => {
                     <h2 className="text-shade text-2xl font-semibold mb-3 mx-auto">No booking data</h2>
                     <p className="text-sm text-gray-400 mb-4">Open this page from the seat selection flow or use a bookingId link.</p>
                     <div className="flex justify-center gap-3">
-                        <button onClick={() => navigate(-1)} className="px-4 py-2 rounded border border-white/10 hover:bg-white/5">Go back</button>
+                        <button onClick={() => navigate("/movies")} className="px-4 py-2 rounded border border-white/10 hover:bg-white/5">Go back</button>
                         <button onClick={() => navigate("/")} className="px-4 py-2 rounded bg-primary text-black font-medium">Home</button>
                     </div>
                     <div className="mt-6 w-full bg-black/60 border border-white/10 p-4 rounded text-xs text-gray-300">

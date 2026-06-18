@@ -284,7 +284,7 @@ const MovieDetails = () => {
 
       {/* Back button */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/movies")}
         className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 hover:text-white transition cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" /> Back

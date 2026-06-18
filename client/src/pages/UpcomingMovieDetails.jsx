@@ -58,7 +58,7 @@ const UpcomingMovieDetails = () => {
                 <p className="text-lg mb-4">{error || "Failed to load details"}</p>
 
                 <button
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate("/movies")}
                     className="px-6 py-2 bg-primary rounded-lg hover:bg-primary-dull transition cursor-pointer active:scale-95"
                 >
                     Go Back
@@ -138,7 +138,7 @@ const UpcomingMovieDetails = () => {
                         )}
 
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={() => navigate("/movies")}
                             className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull rounded-lg transition cursor-pointer active:scale-95"
                         >
                             Back
