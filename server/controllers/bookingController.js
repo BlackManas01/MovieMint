@@ -5,7 +5,7 @@ import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import Stripe from "stripe";
 import { generateTicketPdf } from "../utils/generateTicketPdf.js";
-import { clerkClient } from "@clerk/clerk-sdk-node";
+import { clerkClient } from "@clerk/express";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
