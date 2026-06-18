@@ -356,29 +356,6 @@ const Dashboard = () => {
                 );
             })()}
 
-            {/* Shows by movie today (mini bar chart) */}
-            {(() => {
-                const top = [...activeShowsByMovie].sort((a, b) => b.shows.length - a.shows.length).slice(0, 6);
-                if (!top.length) return null;
-                const max = Math.max(...top.map((g) => g.shows.length), 1);
-                return (
-                    <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-4">Shows by movie today</p>
-                        <div className="space-y-3">
-                            {top.map((g) => (
-                                <div key={g.movieId} className="flex items-center gap-3">
-                                    <div className="w-28 sm:w-44 truncate text-sm text-gray-200 shrink-0">{g.movie.title}</div>
-                                    <div className="flex-1 h-2.5 rounded-full bg-white/5 overflow-hidden">
-                                        <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-500 transition-all duration-700 ease-out" style={{ width: `${(g.shows.length / max) * 100}%` }} />
-                                    </div>
-                                    <div className="w-8 text-right text-sm font-semibold text-violet-200">{g.shows.length}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })()}
-
             {/* Active shows, grouped by movie */}
             <p className="mt-12 text-xl font-semibold tracking-tight bg-gradient-to-r from-white to-violet-300/80 bg-clip-text text-transparent w-max">Active Shows Today</p>
             <div className="relative flex flex-wrap gap-6 mt-4 max-w-5xl group">
