@@ -5,6 +5,7 @@ import BlurCircle from "../components/BlurCircle";
 import Loading from "../components/Loading";
 import MyBookingSkeleton from "../components/MyBookingSkeleton";
 import { useAppContext } from "../context/AppContext";
+import { makeIcs, downloadIcs } from "../lib/calendar";
 
 /* constants */
 const TEMP_HOLD_PREFIX = "tempHold:";
@@ -408,11 +409,8 @@ const MyBookings = () => {
       return combined.filter(i => !i.isPaid);
     }
 
-    if (filterType === "EXPIRED") {
-      return combined.filter(i => i.__expired);
-    }
-
-    return combined;
+    // Expired bookings are hidden from users (visible to admins only).
+    return combined.filter(i => !i.__expired);
   }, [
     bookings,
     localHoldsByShow,
@@ -537,7 +535,7 @@ const MyBookings = () => {
       <div className="relative px-6 md:px-16 lg:px-40 pt-30 md:pt-40 min-h-[80vh]">
         <BlurCircle top="100px" left="100px" />
         <div><BlurCircle bottom="0px" left="600px" /></div>
-        <h1 className="text-lg font-semibold mb-4">My Bookings</h1>
+        <h1 className="text-shade text-2xl font-semibold mb-4">My Bookings</h1>
         <Loading />
       </div>
     );
@@ -564,9 +562,9 @@ const MyBookings = () => {
       <div className="relative px-6 md:px-16 lg:px-40 pt-30 md:pt-40 min-h-[80vh]">
         <BlurCircle top="100px" left="100px" />
         <div><BlurCircle bottom="0px" left="600px" /></div>
-        <h1 className="text-lg font-semibold mb-4">My Bookings</h1>
+        <h1 className="text-shade text-2xl font-semibold mb-4">My Bookings</h1>
         <div className="flex gap-3 mb-6">
-          {["ALL", "PAID", "PENDING", "EXPIRED"].map((t) => (
+          {["ALL", "PAID", "PENDING"].map((t) => (
             <button
               key={t}
               onClick={() => {
@@ -575,7 +573,7 @@ const MyBookings = () => {
               }}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition cursor-pointer
         ${filterType === t
-                  ? "bg-teal-500 text-black"
+                  ? "bg-primary text-black"
                   : "bg-white/10 text-gray-300 hover:bg-white/20"
                 }`}
             >
@@ -597,7 +595,7 @@ const MyBookings = () => {
             <div className="w-20 h-20 rounded-full border border-dashed border-white/20 flex items-center justify-center mb-4 animate-pulse-soft">
               🎟️
             </div>
-            <p className="text-lg font-medium">No bookings found</p>
+            <p className="text-shade text-lg font-semibold mx-auto">No bookings found</p>
             <p className="text-sm text-gray-500 mt-1">
               Your bookings will appear here
             </p>
@@ -678,9 +676,21 @@ const MyBookings = () => {
                           EXPIRED
                         </div>
                       )}
-                      {item.isPaid && (
-                        <div className="mt-3 text-xs restaurant text-emerald-400">
-                          Ticket confirmed
+                      {item.isPaid && !item.__expired && (
+                        <div className="mt-3 flex items-center gap-3">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=0&data=${encodeURIComponent(`MOVIEMINT|${item._id || item.id || ""}`)}`}
+                            alt="Ticket QR"
+                            className="w-16 h-16 rounded-md bg-white p-1 shrink-0"
+                            loading="lazy"
+                          />
+                          <div className="text-xs leading-relaxed">
+                            <div className="text-emerald-400 font-semibold">Ticket confirmed</div>
+                            <div className="text-gray-400">Scan at the entry gate</div>
+                            <div className="text-gray-500 mt-0.5">
+                              ID: {(item._id || item.id || "").toString().slice(-8).toUpperCase()}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -688,7 +698,7 @@ const MyBookings = () => {
 
                   <div className="flex flex-col justify-between items-end">
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-teal-400">{currency} {resolveAmount(item)}</div>
+                      <div className="text-3xl font-bold text-primary">{currency} {resolveAmount(item)}</div>
 
                       {!isPaid ? (
                         <>
@@ -722,6 +732,35 @@ const MyBookings = () => {
                             </a>
                           )}
 
+                          {/* ADD TO CALENDAR */}
+                          {item.isPaid && !item.__expired && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const start =
+                                  item.show?.showDateTime ||
+                                  item.show?.showTime ||
+                                  item.time ||
+                                  item.date;
+                                if (!start) return;
+                                const title = item.show?.movie?.title || item.movie?.title || item.movieTitle || "Movie";
+                                const place = item.show?.theaterName || item.show?.theater?.name || item.theaterName || "";
+                                const seats = (item.seats || item.bookedSeats || []).join(", ");
+                                const ics = makeIcs({
+                                  title: `🎬 ${title} — MovieMint`,
+                                  start,
+                                  durationMin: resolveRuntime(item) || 150,
+                                  location: place,
+                                  description: `Seats: ${seats}`,
+                                });
+                                downloadIcs(`moviemint-${title}.ics`, ics);
+                              }}
+                              className="px-4 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 transition cursor-pointer"
+                            >
+                              Add to calendar
+                            </button>
+                          )}
+
                           {item.__expired && (
                             <div className="text-xs text-red-400 mt-2">
                               Ticket expired
@@ -736,7 +775,7 @@ const MyBookings = () => {
                           e.stopPropagation();
                           window.location.href = item.paymentLink;
                         }}
-                        className="mt-3 px-6 py-2 cursor-pointer rounded-full text-sm font-semibold bg-teal-500 text-black hover:bg-teal-400 transition"
+                        className="mt-3 px-6 py-2 cursor-pointer rounded-full text-sm font-semibold bg-primary text-black hover:bg-primary-dull transition"
                       >
                         Pay Now
                       </button>

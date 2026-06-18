@@ -1,10 +1,17 @@
 // components/TrailersSection.jsx - YouTube trailer carousel with play/pause functionality
 import React, { useEffect, useState, useCallback } from "react";
-import ReactPlayer from "react-player";
-import { PlayCircleIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlayCircleIcon, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 
 const VISIBLE_COUNT = 5;
+
+// Extract the YouTube video id from a watch/share/embed URL.
+const getYouTubeId = (url = "") => {
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/
+  );
+  return match ? match[1] : null;
+};
 
 const TrailersSection = () => {
   const { axios, image_base_url } = useAppContext();
@@ -84,7 +91,7 @@ const TrailersSection = () => {
     <section className="px-6 md:px-16 lg:px-24 xl:px-44 py-20 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between max-w-[960px] mx-auto">
-        <p className="text-gray-300 font-medium text-lg">
+        <p className="text-shade font-semibold text-xl">
           Now Playing &amp; Upcoming Movies Trailers
         </p>
       </div>
@@ -95,24 +102,58 @@ const TrailersSection = () => {
           <div className="mx-auto max-w-full w-[960px] h-[540px] bg-gray-800 rounded-xl animate-pulse" />
         ) : currentTrailer ? (
           <>
-            <ReactPlayer
-              url={currentTrailer.videoUrl}
-              controls
-              playing={false}
-              className="mx-auto max-w-full"
-              width="960px"
-              height="540px"
-            />
+            <div className="relative mx-auto max-w-full w-[960px] h-[540px] rounded-xl overflow-hidden bg-black">
+              <a
+                href={`https://www.youtube.com/watch?v=${getYouTubeId(currentTrailer.videoUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group absolute inset-0 h-full w-full cursor-pointer"
+                aria-label={`Play trailer on YouTube: ${currentTrailer.title}`}
+              >
+                <img
+                  src={`https://img.youtube.com/vi/${getYouTubeId(currentTrailer.videoUrl)}/maxresdefault.jpg`}
+                  onError={(e) => {
+                    e.currentTarget.src = `https://img.youtube.com/vi/${getYouTubeId(currentTrailer.videoUrl)}/hqdefault.jpg`;
+                  }}
+                  alt={currentTrailer.title}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30 transition group-hover:from-black/60" />
+                {/* Play button */}
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-black shadow-[0_10px_40px_-8px_rgba(0,0,0,0.7)] transition-transform duration-300 group-hover:scale-110">
+                    <PlayCircleIcon className="h-9 w-9" />
+                  </span>
+                </span>
+                {/* Title chip bottom-left */}
+                <span className="absolute left-4 bottom-4 right-4 text-left text-white text-sm md:text-base font-semibold truncate drop-shadow">
+                  {currentTrailer.title}
+                </span>
+              </a>
+            </div>
             <div className="max-w-[960px] mx-auto mt-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm md:text-base text-gray-200 font-medium truncate">
                 {currentTrailer.title}
               </p>
 
-              {currentTrailer.source && (
-                <span className="text-[11px] md:text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-300 uppercase tracking-wide">
-                  {currentTrailer.source === "now" ? "Now Playing" : "Upcoming"}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {currentTrailer.source && (
+                  <span className="text-[11px] md:text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-300 uppercase tracking-wide">
+                    {currentTrailer.source === "now" ? "Now Playing" : "Upcoming"}
+                  </span>
+                )}
+                {getYouTubeId(currentTrailer.videoUrl) && (
+                  <a
+                    href={`https://www.youtube.com/watch?v=${getYouTubeId(currentTrailer.videoUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] md:text-xs px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 transition"
+                  >
+                    Watch on YouTube
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
             </div>
           </>
         ) : (

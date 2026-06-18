@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import MovieCard from "./MovieCard";
 // MovieCardSkeleton is no longer conditionally mounted here; MovieCard handles loading internally.
 import { useAppContext } from "../context/AppContext";
+import { movieInCity } from "../lib/cities";
 
 /**
  * FeaturedSection
@@ -14,7 +15,7 @@ import { useAppContext } from "../context/AppContext";
  */
 const FeaturedSection = () => {
   const navigate = useNavigate();
-  const { shows = [], loadingShows = false, axios } = useAppContext();
+  const { shows = [], loadingShows = false, axios, city } = useAppContext();
 
   // local runtime cache: { [movieId]: minutes | null (fetched but missing) }
   const [runtimeCache, setRuntimeCache] = useState({});
@@ -121,11 +122,14 @@ const FeaturedSection = () => {
   const SLOTS = 4;
   const slotsArray = Array.from({ length: SLOTS });
 
+  // Curate the featured row to the selected city (matches the Movies page).
+  const cityShows = (shows || []).filter((s) => movieInCity(getMovieId(s), city));
+
   return (
     <section className="px-6 md:px-16 lg:px-24 xl:px-44 pt-24 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between w-full mb-10">
-        <p className="text-gray-300 font-semibold text-2xl ml-25">Now in Theaters</p>
+        <p className="text-shade font-semibold text-2xl">Now in Theaters</p>
 
         <button
           onClick={() => navigate("/movies")}
@@ -139,7 +143,7 @@ const FeaturedSection = () => {
       {/* Movie list: always render fixed slots */}
       <div className="flex flex-wrap justify-center gap-8">
         {slotsArray.map((_, idx) => {
-          const showAtIdx = shows?.[idx] ?? null;
+          const showAtIdx = cityShows?.[idx] ?? null;
           if (loadingShows || !showAtIdx) {
             // show loading skeleton via MovieCard's loading prop
             // key must be stable per position to keep component instances stable across renders
@@ -154,14 +158,14 @@ const FeaturedSection = () => {
       </div>
 
       {/* Show More btn → only if real data */}
-      {!loadingShows && shows.length > 0 && (
+      {!loadingShows && cityShows.length > 0 && (
         <div className="flex justify-center mt-14">
           <button
             onClick={() => {
               navigate("/movies");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="px-10 py-3 text-sm bg-teal-700 hover:bg-teal-600 transition rounded-full font-medium cursor-pointer"
+            className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull text-black transition rounded-full font-medium cursor-pointer"
           >
             Show More
           </button>

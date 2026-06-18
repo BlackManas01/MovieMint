@@ -1,6 +1,6 @@
 // components/DateSelect.jsx - Horizontally scrollable date picker for selecting show dates
 import React, { useEffect, useState, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 
 const VISIBLE_COUNT = 4;
 
@@ -148,24 +148,39 @@ const DateSelect = ({ dateTime, onDateChange }) => {
     <div className="pt-28" id="dateSelect">
       <div
         className="
-          relative rounded-2xl border border-white/8 
-          p-6 md:p-7 mt-10
-          bg-gradient-to-br from-black/60 via-black/45 to-black/70 
-          backdrop-blur-2xl shadow-[0_0_40px_-12px_rgba(255,0,150,0.45)]
+          relative overflow-hidden rounded-3xl border border-primary/20
+          p-6 md:p-9 mt-10
+          bg-gradient-to-br from-[#15101c] via-[#0b0910] to-black
+          backdrop-blur-2xl shadow-[0_25px_80px_-30px_rgba(168,85,247,0.45)]
         "
       >
+        {/* Decorative ambient glows */}
+        <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-primary/20 blur-[90px]" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-primary/10 blur-[90px]" />
+
         {/* Title row + Month/Year chip */}
-        <div className="flex items-center justify-between mb-4 gap-3">
-          <p className="text-lg md:text-xl font-semibold text-white">
-            🎬 Choose Your Show Date
-          </p>
+        <div className="relative flex items-center justify-between mb-6 gap-3">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 shadow-[0_0_25px_-6px_rgba(168,85,247,0.6)]">
+              <CalendarDays className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-semibold tracking-tight bg-gradient-to-r from-white via-white to-primary/70 bg-clip-text text-transparent">
+                Choose Your Show Date
+              </h2>
+              <p className="text-[11px] md:text-xs uppercase tracking-[0.22em] text-gray-400 mt-1">
+                Pick a day to view available timings
+              </p>
+            </div>
+          </div>
 
           {selectedMonthYear && (
             <span
               className="
-              text-[11px] px-3 py-1 rounded-full 
-              bg-white/5 border border-white/15 
-              text-gray-200 tracking-wide
+              inline-flex items-center text-[11px] px-4 py-2 rounded-full
+              bg-white/5 border border-primary/25
+              text-gray-100 tracking-wide backdrop-blur-sm
+              shadow-[0_0_20px_-10px_rgba(168,85,247,0.7)]
             "
             >
               {selectedMonthYear}
@@ -173,7 +188,7 @@ const DateSelect = ({ dateTime, onDateChange }) => {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-6">
+        <div className="relative flex items-center justify-between gap-6">
           {/* LEFT ARROW – fixed width so layout doesn’t jump */}
           <button
             onClick={handlePrev}
@@ -214,12 +229,12 @@ const DateSelect = ({ dateTime, onDateChange }) => {
                     flex flex-col items-center justify-center
                     w-[3.7rem] md:w-[3.9rem]
                     h-16 md:h-16
-                    rounded-lg
+                    rounded-xl
                     border transition-all duration-200 
                     text-[11px] uppercase tracking-wide 
                     ${isActive
-                      ? "bg-white text-black border-pink-400 shadow-lg scale-[1.04]"
-                      : "bg-white/5 hover:bg-white/10 border-white/15 text-white/90"
+                      ? "bg-gradient-to-b from-primary to-primary-dull text-black border-primary shadow-[0_10px_30px_-10px_rgba(168,85,247,0.9)] scale-[1.06]"
+                      : "bg-white/5 hover:bg-white/10 border-white/15 text-white/90 hover:border-primary/40"
                     }
                   `}
                 >

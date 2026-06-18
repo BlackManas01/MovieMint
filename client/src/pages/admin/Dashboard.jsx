@@ -223,7 +223,7 @@ const Dashboard = () => {
     // ---------- Loading skeleton ----------
     if (loading) {
         return (
-            <>
+            <div className="w-full">
                 <Title text1="Admin" text2="Dashboard" />
                 <div className="relative flex flex-wrap gap-4 mt-6">
                     <BlurCircle top="-100px" left="0" />
@@ -256,33 +256,64 @@ const Dashboard = () => {
                         </div>
                     ))}
                 </div>
-            </>
+            </div>
         );
     }
 
     // ---------- Render ----------
     return (
-        <>
+        <div className="w-full">
             <Title text1="Admin" text2="Dashboard" />
 
             {/* Stats cards */}
-            <div className="relative flex flex-wrap gap-4 mt-6">
+            <div className="relative grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mt-8">
                 <BlurCircle top="-100px" left="0" />
-                <div className="flex flex-wrap gap-4 w-full">
-                    {dashboardCards.map((card, index) => (
-                        <div key={index} className="flex items-center justify-between px-4 py-3 bg-primary/10 border border-primary/20 rounded-md max-w-50 w-full transition-transform transition-opacity duration-200">
+                {dashboardCards.map((card, index) => (
+                    <div key={index} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-5 backdrop-blur-sm transition-all duration-300 hover:border-violet-400/40 hover:shadow-[0_20px_60px_-30px_rgba(167,139,250,0.8)]">
+                        <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-violet-400/10 blur-2xl" />
+                        <div className="relative flex items-start justify-between">
                             <div>
-                                <h1 className="text-sm">{card.title}</h1>
-                                <p className="text-xl font-medium mt-1">{card.value}</p>
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400">{card.title}</p>
+                                <p className="text-3xl font-semibold mt-2 tracking-tight">{card.value}</p>
                             </div>
-                            <card.icon className="w-6 h-6" />
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-400/30 bg-violet-400/10 text-violet-300 shadow-[0_0_25px_-8px_rgba(167,139,250,0.8)]">
+                                <card.icon className="w-5 h-5" />
+                            </div>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
 
+            {/* Insights row */}
+            {(() => {
+                const bookings = Number(dashboardData.totalBookings || 0);
+                const revenue = Number(dashboardData.totalRevenue || 0);
+                const avgTicket = bookings > 0 ? Math.round(revenue / bookings) : 0;
+                const top = [...activeShowsByMovie].sort((a, b) => b.shows.length - a.shows.length)[0];
+                const insights = [
+                    { label: "Avg. ticket price", value: `${currency || ""} ${avgTicket}` },
+                    { label: "Shows scheduled today", value: rawActiveShows.length || 0 },
+                    {
+                        label: "Top movie today",
+                        value: top?.movie?.title || "—",
+                        sub: top ? `${top.shows.length} show(s)` : "",
+                    },
+                ];
+                return (
+                    <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-5 mt-5">
+                        {insights.map((it) => (
+                            <div key={it.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400">{it.label}</p>
+                                <p className="text-xl font-semibold mt-2 tracking-tight truncate">{it.value}</p>
+                                {it.sub && <p className="text-xs text-gray-500 mt-1">{it.sub}</p>}
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
+
             {/* Active shows, grouped by movie */}
-            <p className="mt-10 text-lg font-medium">Active Shows</p>
+            <p className="mt-12 text-xl font-semibold tracking-tight bg-gradient-to-r from-white to-violet-300/80 bg-clip-text text-transparent w-max">Active Shows Today</p>
             <div className="relative flex flex-wrap gap-6 mt-4 max-w-5xl group">
                 <BlurCircle top="100px" left="-10%" />
                 {activeShowsByMovie.length === 0 ? (
@@ -308,9 +339,14 @@ const Dashboard = () => {
                                 type="button"
                                 key={group.movieId}
                                 onClick={() => openMovieModal(group)}
-                                className="w-55 rounded-lg cursor-pointer overflow-hidden h-full pb-3 bg-primary/10 border border-primary/20 transition-all duration-200 group-hover:opacity-60 hover:opacity-100 hover:-translate-y-1 hover:scale-[1.02] text-left"
+                                className="w-55 rounded-xl cursor-pointer overflow-hidden h-full pb-3 bg-white/[0.03] border border-white/10 transition-all duration-200 group-hover:opacity-60 hover:opacity-100 hover:-translate-y-1 hover:scale-[1.02] hover:border-violet-400/40 hover:shadow-[0_20px_50px_-28px_rgba(167,139,250,0.8)] text-left"
                             >
-                                {poster && <img src={image_base_url + poster} alt={movie.title || "Movie"} className="h-60 w-full object-cover" />}
+                                {poster && (
+                                    <div className="relative">
+                                        <img src={image_base_url + poster} alt={movie.title || "Movie"} className="h-60 w-full object-cover" />
+                                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 surface-fade-up" />
+                                    </div>
+                                )}
 
                                 <p className="font-medium p-2 truncate">{movie.title || "Untitled"}</p>
 
@@ -318,7 +354,7 @@ const Dashboard = () => {
                                     <p className="text-medium font-medium">{runtimeLabel}</p>
 
                                     <p className="flex items-center gap-1 text-sm text-gray-400 mt-1 pr-1">
-                                        <StarIcon className="w-4 h-4 text-primary fill-primary" />
+                                        <StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" />
                                         {rating ? rating.toFixed(1) : "—"}
                                     </p>
                                 </div>
@@ -366,7 +402,7 @@ const Dashboard = () => {
                                                 {theater.shows.map((show) => (
                                                     <div key={show._id} className="px-3 py-1.5 rounded-md border border-white/20 bg-black/50 text-xs flex flex-col gap-0.5">
                                                         <span className="font-semibold text-gray-100">{formatTime(show.showDateTime)}</span>
-                                                        <span className="text-[11px] text-primary">{show.format || "2D"}</span>
+                                                        <span className="text-[11px] text-violet-300">{show.format || "2D"}</span>
                                                         <span className="text-[11px] text-gray-400">{show.experience || "Standard"}</span>
                                                         <span className="text-[11px] text-gray-300">Price: {currency} {show.showPrice ?? show.price ?? 0}</span>
                                                     </div>
@@ -380,7 +416,7 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 };
 

@@ -757,14 +757,24 @@ const ShowDetails = () => {
      * ------------------------------------------------------------------------ */
 
     return (
-        <>
+        <div className="w-full">
             <Title text1="Show" text2="Details" />
 
             {/* Movie grid header */}
-            <p className="mt-10 text-lg font-medium">Now in Theaters</p>
+            <p className="mt-10 text-xl font-semibold tracking-tight bg-gradient-to-r from-white to-violet-300/80 bg-clip-text text-transparent w-max">Now in Theaters</p>
 
             {loadingMovies ? (
-                <p className="mt-4 text-gray-400 text-sm">Loading movies...</p>
+                <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                        <div key={i} className="rounded-xl overflow-hidden bg-white/[0.03] border border-white/10 animate-pulse">
+                            <div className="h-56 w-full bg-white/[0.05]" />
+                            <div className="p-2 space-y-2">
+                                <div className="h-3 w-3/4 bg-white/10 rounded" />
+                                <div className="h-3 w-1/2 bg-white/10 rounded" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             ) : movies.length === 0 ? (
                 <p className="mt-4 text-gray-400 text-sm">
                     No movies found for the current &quot;Now in Theaters&quot; window.
@@ -791,8 +801,8 @@ const ShowDetails = () => {
                     relative cursor-pointer transition-all duration-300
                     rounded-xl overflow-hidden
                     bg-black/60 border border-white/10
-                    hover:border-primary/70 hover:shadow-lg hover:shadow-primary/20
-                    ${isActive ? "scale-105 ring-2 ring-primary/80" : ""}
+                    hover:border-violet-400/70 hover:shadow-lg hover:shadow-violet-400/20
+                    ${isActive ? "scale-105 ring-2 ring-violet-400/80" : ""}
                   `}
                                 >
                                     <div className="relative">
@@ -808,7 +818,7 @@ const ShowDetails = () => {
                       "
                                         >
                                             <p className="flex items-center gap-1 text-gray-300">
-                                                <StarIcon className="w-4 h-4 text-primary fill-primary" />
+                                                <StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" />
                                                 {movie.vote_average?.toFixed
                                                     ? movie.vote_average.toFixed(1)
                                                     : movie.vote_average}
@@ -924,8 +934,8 @@ const ShowDetails = () => {
                       inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px]
                       cursor-pointer border
                       ${isMovieHidden
-                                                ? "border-emerald-400 text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/50"
-                                                : "border-red-400 text-red-300 bg-red-900/30 hover:bg-red-900/50"
+                                                ? "border-violet-400 text-violet-300 bg-violet-900/30 hover:bg-violet-900/50"
+                                                : "border-amber-400 text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
                                             }
                     `}
                                     >
@@ -938,7 +948,7 @@ const ShowDetails = () => {
                                 </div>
 
                                 {isMovieHidden && (
-                                    <p className="text-[11px] text-orange-400 mt-1">
+                                    <p className="text-[11px] text-violet-400 mt-1">
                                         This movie is currently hidden from &quot;Now in
                                         Theaters&quot;. Unhide it to view and manage its show
                                         schedule.
@@ -968,7 +978,7 @@ const ShowDetails = () => {
                           text-[11px] px-3 py-1.5 rounded-md cursor-pointer border
                           ${savingFormatPrices || !formatPrices.length
                                                         ? "border-white/20 text-gray-400 cursor-not-allowed"
-                                                        : "border-primary text-primary hover:bg-primary/10"
+                                                        : "border-violet-400 text-violet-300 hover:bg-violet-400/10"
                                                     }
                         `}
                                             >
@@ -1047,14 +1057,14 @@ const ShowDetails = () => {
                                 px-3 py-1.5 rounded-full text-xs whitespace-nowrap cursor-pointer
                                 border transition relative
                                 ${isActive
-                                                                    ? "bg-primary text-white border-primary"
+                                                                    ? "bg-violet-400 text-black border-violet-400"
                                                                     : "bg-white/5 text-gray-300 border-white/15 hover:bg-white/10"
                                                                 }
                               `}
                                                         >
                                                             {formatDateLabel(day.date)}
                                                             {allHidden && (
-                                                                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-400" />
+                                                                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-violet-400" />
                                                             )}
                                                         </button>
                                                     );
@@ -1081,7 +1091,7 @@ const ShowDetails = () => {
                                                         className={`
                               inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-md cursor-pointer border
                               ${groupedTheatersForDay.length
-                                                                ? "border-primary text-primary hover:bg-primary/10"
+                                                                ? "border-violet-400 text-violet-300 hover:bg-violet-400/10"
                                                                 : "border-white/15 text-gray-500 cursor-not-allowed"
                                                             }
                             `}
@@ -1097,8 +1107,8 @@ const ShowDetails = () => {
                                                             className={`
                                 text-[11px] px-3 py-1 rounded-md cursor-pointer border
                                 ${isDayAllHidden
-                                                                    ? "border-emerald-400 text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/50"
-                                                                    : "border-red-400 text-red-300 bg-red-900/30 hover:bg-red-900/50"
+                                                                    ? "border-violet-400 text-violet-300 bg-violet-900/30 hover:bg-violet-900/50"
+                                                                    : "border-amber-400 text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
                                                                 }
                               `}
                                                         >
@@ -1175,8 +1185,8 @@ const ShowDetails = () => {
                                                                             className={`
                                         text-[11px] px-3 py-1 rounded-md cursor-pointer border
                                         ${allHiddenForTheater
-                                                                                    ? "border-emerald-400 text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/50"
-                                                                                    : "border-red-400 text-red-300 bg-red-900/30 hover:bg-red-900/50"
+                                                                                    ? "border-violet-400 text-violet-300 bg-violet-900/30 hover:bg-violet-900/50"
+                                                                                    : "border-amber-400 text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
                                                                                 }
                                       `}
                                                                         >
@@ -1211,7 +1221,7 @@ const ShowDetails = () => {
                                                                                     "border-yellow-400 bg-yellow-950/40";
                                                                             } else if (status === "upcoming") {
                                                                                 statusClasses =
-                                                                                    "border-emerald-400 bg-emerald-950/30";
+                                                                                    "border-violet-400 bg-violet-950/30";
                                                                             } else {
                                                                                 statusClasses =
                                                                                     "border-white/20 bg-black/40";
@@ -1231,7 +1241,7 @@ const ShowDetails = () => {
                                                                                         <span className="text-xs font-semibold text-gray-100">
                                                                                             {formatTimeLabel(slot.time)}
                                                                                         </span>
-                                                                                        <span className="text-[10px] text-primary mt-0.5">
+                                                                                        <span className="text-[10px] text-violet-300 mt-0.5">
                                                                                             {slot.experience || "Laser"}
                                                                                         </span>
                                                                                         <span className="text-[10px] text-gray-300">
@@ -1244,13 +1254,13 @@ const ShowDetails = () => {
 
                                                                                         {/* Status badges */}
                                                                                         {slot.hidden && (
-                                                                                            <span className="text-[10px] text-orange-400 mt-0.5">
+                                                                                            <span className="text-[10px] text-violet-400 mt-0.5">
                                                                                                 Hidden from users
                                                                                             </span>
                                                                                         )}
                                                                                         {!slot.hidden &&
                                                                                             status === "past" && (
-                                                                                                <span className="text-[10px] text-red-400 mt-0.5">
+                                                                                                <span className="text-[10px] text-amber-300 mt-0.5">
                                                                                                     Show time passed
                                                                                                 </span>
                                                                                             )}
@@ -1321,7 +1331,7 @@ const ShowDetails = () => {
 
                                 <h3 className="text-sm font-semibold mb-1">
                                     Add show for&nbsp;
-                                    <span className="text-primary">
+                                    <span className="text-violet-300">
                                         {selectedMovie?.title || ""}
                                     </span>
                                 </h3>
@@ -1396,7 +1406,7 @@ const ShowDetails = () => {
                                             <button
                                                 type="button"
                                                 onClick={handleAddTimeToList}
-                                                className="inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-md cursor-pointer border border-primary text-primary hover:bg-primary/10"
+                                                className="inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-md cursor-pointer border border-violet-400 text-violet-300 hover:bg-violet-400/10"
                                             >
                                                 <Plus className="w-3 h-3" /> Add
                                             </button>
@@ -1413,7 +1423,7 @@ const ShowDetails = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => removeTimeFromList(t)}
-                                                            className="hover:text-red-400"
+                                                            className="hover:text-amber-300"
                                                         >
                                                             ×
                                                         </button>
@@ -1490,7 +1500,7 @@ const ShowDetails = () => {
                                         disabled={
                                             creatingShows || groupedTheatersForDay.length === 0
                                         }
-                                        className="px-4 py-1 rounded-md border border-primary bg-primary/20 text-primary hover:bg-primary/30 cursor-pointer disabled:opacity-50"
+                                        className="px-4 py-1 rounded-md border border-violet-400 bg-violet-400/20 text-violet-300 hover:bg-violet-400/30 cursor-pointer disabled:opacity-50"
                                     >
                                         {creatingShows ? "Creating..." : "Create show(s)"}
                                     </button>
@@ -1500,7 +1510,7 @@ const ShowDetails = () => {
                     )}
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

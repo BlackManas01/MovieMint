@@ -1,5 +1,5 @@
 // pages/admin/ListShows.jsx - Calendar view of shows grouped by movie with per-date stats
-import { X } from "lucide-react";
+import { X, ClapperboardIcon } from "lucide-react";
 import {
     useCallback,
     useEffect,
@@ -218,7 +218,7 @@ const ListShows = () => {
     /* ------------------------------------------------------------------------ */
 
     return (
-        <>
+        <div className="w-full">
             <Title text1="List" text2="Shows" />
 
             {/* Date selector row */}
@@ -232,7 +232,7 @@ const ListShows = () => {
                                 onClick={() => setSelectedDate(d.iso)}
                                 className={`px-3 py-1.5 rounded-full text-xs sm:text-sm border cursor-pointer transition
                   ${isActive
-                                        ? "bg-primary text-white border-primary shadow-md shadow-primary/40"
+                                        ? "bg-violet-400 text-black border-violet-400 shadow-md shadow-violet-400/40"
                                         : "bg-white/5 text-gray-300 border-white/15 hover:bg-white/10"
                                     }
                 `}
@@ -258,7 +258,7 @@ const ListShows = () => {
             <div className="mt-5 max-w-5xl overflow-x-auto rounded-xl border border-white/10 bg-black/40">
                 <table className="w-full border-collapse text-sm">
                     <thead>
-                        <tr className="bg-primary/15 text-left text-xs sm:text-sm">
+                        <tr className="bg-white/[0.04] text-left text-xs sm:text-sm">
                             <th className="p-3 sm:p-4 font-medium">Movie</th>
                             <th className="p-3 sm:p-4 font-medium text-center">
                                 Shows
@@ -275,24 +275,48 @@ const ListShows = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading && (
-                            <tr>
-                                <td
-                                    colSpan={5}
-                                    className="p-4 text-center text-gray-400 text-xs"
+                        {loading &&
+                            Array.from({ length: 6 }).map((_, i) => (
+                                <tr
+                                    key={`sk-${i}`}
+                                    className="border-t border-white/5 animate-pulse"
                                 >
-                                    Loading shows...
-                                </td>
-                            </tr>
-                        )}
+                                    <td className="p-3 sm:p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="hidden sm:block w-10 h-14 rounded-md bg-white/10" />
+                                            <div className="space-y-2">
+                                                <div className="h-3.5 w-32 sm:w-44 rounded bg-white/10" />
+                                                <div className="h-2.5 w-20 rounded bg-white/5" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-3 sm:p-4">
+                                        <div className="h-3 w-6 rounded bg-white/10 mx-auto" />
+                                    </td>
+                                    <td className="p-3 sm:p-4">
+                                        <div className="h-3 w-6 rounded bg-white/10 mx-auto" />
+                                    </td>
+                                    <td className="p-3 sm:p-4">
+                                        <div className="h-3 w-16 rounded bg-white/10 mx-auto" />
+                                    </td>
+                                    <td className="p-3 sm:p-4">
+                                        <div className="h-7 w-20 rounded-full bg-white/10 ml-auto" />
+                                    </td>
+                                </tr>
+                            ))}
 
                         {!loading && filteredSummaries.length === 0 && (
                             <tr>
-                                <td
-                                    colSpan={5}
-                                    className="p-4 text-center text-gray-400 text-xs"
-                                >
-                                    No shows found for this date.
+                                <td colSpan={5} className="py-14 text-center">
+                                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                                        <span className="relative flex h-16 w-16 items-center justify-center">
+                                            <span className="absolute inset-0 rounded-full border border-dashed border-white/15 animate-[spin_9s_linear_infinite]" />
+                                            <span className="absolute inset-1 rounded-full bg-white/[0.03]" />
+                                            <ClapperboardIcon className="relative w-7 h-7 text-violet-400/80 animate-pulse" />
+                                        </span>
+                                        <p className="text-base font-medium text-gray-300">No shows for this date</p>
+                                        <p className="text-xs text-gray-500">Pick another date or add shows from Show Details.</p>
+                                    </div>
                                 </td>
                             </tr>
                         )}
@@ -359,7 +383,7 @@ const ListShows = () => {
                                         <td className="p-3 sm:p-4 text-right">
                                             <button
                                                 onClick={() => setSelectedMovieSummary(item)}
-                                                className="text-xs sm:text-[13px] px-3 py-1.5 rounded-full bg-white/10 hover:bg-primary/80 hover:text-white border border-white/15 cursor-pointer transition"
+                                                className="text-xs sm:text-[13px] px-3 py-1.5 rounded-full bg-white/10 hover:bg-violet-400/80 hover:text-black border border-white/15 cursor-pointer transition"
                                             >
                                                 View slots
                                             </button>
@@ -439,7 +463,7 @@ const ListShows = () => {
                                             </div>
                                             <p className="text-[11px] text-gray-300">
                                                 Theater earnings:{" "}
-                                                <span className="font-semibold text-primary">
+                                                <span className="font-semibold text-violet-300">
                                                     {currency}{" "}
                                                     {theater.earnings?.toLocaleString
                                                         ? theater.earnings.toLocaleString()
@@ -469,7 +493,7 @@ const ListShows = () => {
                                                             <span className="text-xs font-semibold text-gray-100">
                                                                 {formatTime(slot.time)}
                                                             </span>
-                                                            <span className="text-[10px] text-primary mt-0.5">
+                                                            <span className="text-[10px] text-violet-300 mt-0.5">
                                                                 {slot.experience || "Laser"}
                                                             </span>
                                                             <span className="text-[10px] text-gray-400">
@@ -479,7 +503,7 @@ const ListShows = () => {
                                                                 Price: {currency} {slot.showPrice}
                                                             </span>
                                                             {slot.hidden && (
-                                                                <span className="text-[10px] text-orange-400 mt-0.5">
+                                                                <span className="text-[10px] text-violet-400 mt-0.5">
                                                                     Hidden from users
                                                                 </span>
                                                             )}
@@ -495,7 +519,7 @@ const ListShows = () => {
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 };
 

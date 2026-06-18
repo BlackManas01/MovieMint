@@ -2,6 +2,7 @@
 import { clerkMiddleware } from '@clerk/express';
 import cors from 'cors';
 import 'dotenv/config';
+import dns from 'node:dns';
 import express from 'express';
 import { serve } from "inngest/express";
 import path from "path";
@@ -15,6 +16,10 @@ import router from './routes/seed.js';
 import showRouter from './routes/showRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import { fileURLToPath } from "url";
+
+// Prefer IPv6 for outbound requests (e.g. TMDB). Some ISPs block TMDB over
+// IPv4 via DPI; the IPv6 path works through tunnels like Cloudflare WARP.
+dns.setDefaultResultOrder('ipv6first');
 
 // Initialize Express app
 const app = express();
@@ -60,5 +65,12 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
-app.listen(port, () => console.log(`Server listening at http://localhost:${port}`));
+// Only start a listening server outside of Vercel's serverless runtime.
+// On Vercel, the exported app is invoked per-request instead.
+if (!process.env.VERCEL) {
+    app.listen(port, () => console.log(`Server listening at http://localhost:${port}`));
+}
+
+// Export the Express app for Vercel's serverless runtime (@vercel/node).
+export default app;
 

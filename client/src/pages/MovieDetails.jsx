@@ -1,13 +1,17 @@
 // pages/MovieDetails.jsx - Full movie detail page with showtimes, trailers, cast, and date/theater selection
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Heart, PlayCircleIcon, StarIcon, X } from "lucide-react";
+import { Heart, PlayCircleIcon, StarIcon, X, Clapperboard, MapPin, Clock, ShieldCheck, ChevronRight, ArrowLeft } from "lucide-react";
 import BlurCircle from "../components/BlurCircle";
 import timeFormat from "../lib/timeFormat";
 import DateSelect from "../components/DateSelect";
 import MovieCard from "../components/MovieCard";
+import MovieReviews from "../components/MovieReviews";
 import MovieDetailSkeleton from "../components/MovieDetailSkeleton";
+import AgeGate from "../components/AgeGate";
 import { useAppContext } from "../context/AppContext";
+import { formatScreen, partOfDay, PARTS_OF_DAY, availabilityFromRatio, seatPressure, langFor } from "../lib/screenLabel";
+import { addRecent } from "../lib/recentlyViewed";
 import toast from "react-hot-toast";
 
 const MovieDetails = () => {
@@ -19,6 +23,14 @@ const MovieDetails = () => {
   const [showTrailer, setShowTrailer] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedLang, setSelectedLang] = useState("All");
+  const [ageVerified, setAgeVerified] = useState(() => {
+    try {
+      return sessionStorage.getItem("ageVerified") === "1";
+    } catch {
+      return false;
+    }
+  });
   const [daySlots, setDaySlots] = useState([]);      // normalized slots for a single day
 
   const {
@@ -29,6 +41,7 @@ const MovieDetails = () => {
     fetchFavoriteMovies,
     favoriteMovies,
     image_base_url,
+    city,
   } = useAppContext();
 
   /* --------------------------------------------------------------------------
@@ -146,17 +159,21 @@ const MovieDetails = () => {
      *  - Pick theater metadata coming from backend (seedTheaters).
      *  - Keep format / experience / language for display.
      */
-    const normalized = rawSlots.map((slot, idx) => ({
-      id: slot.showId || slot._id || `${selectedDate}-${idx}`,
-      time: slot.time,
-      theaterId: slot.theaterId || null,
-      theaterName: slot.theaterName || "Unknown Theater",
-      theaterCity: slot.theaterCity || "",
-      theaterAddress: slot.theaterAddress || "",
-      format: slot.format || slot.type || "2D",
-      experience: slot.experience || slot.screenType || "Standard",
-      language: slot.language || "English",
-    }));
+    const normalized = rawSlots.map((slot, idx) => {
+      const id = slot.showId || slot._id || `${selectedDate}-${idx}`;
+      const realLang = slot.language && slot.language !== "English" ? slot.language : null;
+      return {
+        id,
+        time: slot.time,
+        theaterId: slot.theaterId || null,
+        theaterName: slot.theaterName || "Unknown Theater",
+        theaterCity: slot.theaterCity || "",
+        theaterAddress: slot.theaterAddress || "",
+        format: slot.format || slot.type || "2D",
+        experience: slot.experience || slot.screenType || "Standard",
+        language: realLang || langFor(id),
+      };
+    });
 
     setDaySlots(normalized);
   }, [show, selectedDate]);
@@ -171,6 +188,10 @@ const MovieDetails = () => {
     daySlots.forEach((slot) => {
       // Ignore any slot that does not have a valid theater name.
       if (!slot.theaterName) return;
+      // City filter — only show theaters in the selected city.
+      if (city && slot.theaterCity && slot.theaterCity !== city) return;
+      // Language filter.
+      if (selectedLang !== "All" && slot.language !== selectedLang) return;
 
       const key = slot.theaterName;
 
@@ -193,7 +214,23 @@ const MovieDetails = () => {
     }));
 
     return result;
-  }, [daySlots]);
+  }, [daySlots, city, selectedLang]);
+
+  // Distinct languages available for the selected date/city (for the filter bar)
+  const availableLanguages = React.useMemo(() => {
+    const set = new Set(
+      daySlots
+        .filter((s) => !city || !s.theaterCity || s.theaterCity === city)
+        .map((s) => s.language)
+        .filter(Boolean)
+    );
+    return Array.from(set);
+  }, [daySlots, city]);
+
+  // Reset the language filter when the date or city changes.
+  useEffect(() => {
+    setSelectedLang("All");
+  }, [city, selectedDate]);
 
   /* --------------------------------------------------------------------------
    * When a user clicks on a specific time → go to seat selection
@@ -212,16 +249,11 @@ const MovieDetails = () => {
   };
 
   /* --------------------------------------------------------------------------
-   * Helper: chunk an array into fixed-size groups
+   * Track recently viewed (for the home "Recently viewed" row)
    * ----------------------------------------------------------------------- */
-
-  const chunk = (arr, size) => {
-    const out = [];
-    for (let i = 0; i < arr.length; i += size) {
-      out.push(arr.slice(i, i + size));
-    }
-    return out;
-  };
+  useEffect(() => {
+    if (show?.movie?.title) addRecent(show.movie);
+  }, [show]);
 
   /* --------------------------------------------------------------------------
    * Guard: while show is loading or missing
@@ -238,6 +270,25 @@ const MovieDetails = () => {
 
   return (
     <div className="px-6 md:px-16 lg:px-40 pt-30 md:pt-50">
+      {/* 18+ age verification */}
+      <AgeGate
+        open={!!movie.adult && !ageVerified}
+        certificate="A · 18+"
+        onConfirm={() => {
+          try { sessionStorage.setItem("ageVerified", "1"); } catch { /* ignore */ }
+          setAgeVerified(true);
+        }}
+        onCancel={() => navigate("/")}
+      />
+
+      {/* Back button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 hover:text-white transition cursor-pointer"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back
+      </button>
+
       {/* Trailer Popup */}
       {showTrailer && trailerEmbedUrl && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 backdrop-blur-sm">
@@ -261,53 +312,75 @@ const MovieDetails = () => {
       )}
 
       {/* MAIN TOP SECTION */}
-      <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto">
-        <img
-          src={image_base_url + movie.poster_path}
-          alt={movie.title}
-          className="max-md:mx-auto rounded-xl h-104 max-w-70 object-cover"
-        />
+      <div className="flex flex-col md:flex-row gap-10 max-w-6xl mx-auto">
+        <div className="relative max-md:mx-auto shrink-0">
+          <div className="pointer-events-none absolute -inset-4 rounded-[28px] bg-primary/20 blur-2xl" />
+          <img
+            src={image_base_url + movie.poster_path}
+            alt={movie.title}
+            className="relative rounded-2xl h-104 max-w-70 object-cover ring-1 ring-white/15 shadow-[0_30px_70px_-25px_rgba(168,85,247,0.55)]"
+          />
+        </div>
 
         <div className="relative flex flex-col gap-3">
           <BlurCircle top="-100px" left="-100px" />
           <p className="text-primary uppercase text-xs tracking-[0.24em]">
             {movie.original_language?.toUpperCase() || "ENGLISH"}
           </p>
-          <h1 className="text-4xl font-semibold max-w-96 text-balance">
+          <h1 className="text-4xl md:text-5xl font-semibold max-w-2xl text-balance tracking-tight bg-gradient-to-r from-white via-white to-primary/70 bg-clip-text text-transparent">
             {movie.title}
           </h1>
 
           <div className="flex items-center gap-3 text-gray-300 text-sm">
-            <div className="flex items-center gap-1">
-              <StarIcon className="w-5 h-5 text-primary fill-primary" />
-              {movie.vote_average.toFixed(1)} User Rating
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-primary/25 backdrop-blur-sm">
+              <StarIcon className="w-4 h-4 text-primary fill-primary" />
+              <span className="font-medium text-white">{movie.vote_average.toFixed(1)}</span>
+              <span className="text-gray-400">User Rating</span>
             </div>
             <span className="text-gray-500">•</span>
             <span>{releaseYear}</span>
           </div>
 
-          <p className="text-gray-400 mt-2 text-sm leading-tight max-w-xl">
+          <p className="text-gray-400 mt-2 text-sm leading-relaxed max-w-xl">
             {movie.overview}
           </p>
 
-          <p className="text-sm text-gray-300">
-            {timeFormat(movie.runtime)} •{" "}
-            {movie.genres.map((genre) => genre.name).join(", ")} •{" "}
-            {movie.release_date}
-          </p>
+          {/* Info chips — certificate / runtime / language / genres */}
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 border border-primary/30 text-primary">
+              {movie.adult ? "A · 18+" : "U/A · 13+"}
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/12 text-gray-200">
+              {timeFormat(movie.runtime)}
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/12 text-gray-200">
+              {(movie.original_language || "en").toUpperCase()}
+            </span>
+            {movie.genres?.slice(0, 3).map((genre) => (
+              <span
+                key={genre.id || genre.name}
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/12 text-gray-200"
+              >
+                {genre.name}
+              </span>
+            ))}
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/12 text-gray-200">
+              {movie.release_date}
+            </span>
+          </div>
 
-          <div className="flex items-center flex-wrap gap-4 mt-4">
+          <div className="flex items-center flex-wrap gap-4 mt-5">
             <button
-              className="flex items-center gap-2 px-7 py-3 text-sm bg-gray-800 hover:bg-gray-900 transition rounded-md font-medium cursor-pointer active:scale-95"
+              className="flex items-center gap-2 px-8 py-3 text-sm bg-gradient-to-b from-white/[0.12] to-white/[0.03] hover:from-primary/30 hover:to-primary/10 border border-white/15 hover:border-primary transition-all duration-300 rounded-xl font-medium cursor-pointer active:scale-95 hover:-translate-y-0.5 hover:shadow-[0_12px_35px_-12px_rgba(168,85,247,0.8)]"
               onClick={handleWatchTrailer}
             >
-              <PlayCircleIcon className="w-5 h-5" />
+              <PlayCircleIcon className="w-5 h-5 text-primary" />
               Watch Trailer
             </button>
 
             <button
               onClick={handleFavorite}
-              className="bg-gray-700 p-2.5 rounded-full transition cursor-pointer active:scale-95"
+              className="p-3 rounded-full bg-white/5 border border-white/15 hover:border-primary/60 transition-all duration-300 cursor-pointer active:scale-95 hover:shadow-[0_0_25px_-6px_rgba(168,85,247,0.8)]"
             >
               <Heart
                 className={`w-5 h-5 ${isFavorite ? "fill-primary text-primary" : ""
@@ -319,47 +392,75 @@ const MovieDetails = () => {
       </div>
 
       {/* CAST */}
-      <p className="text-lg font-medium mt-20">Cast</p>
-      <div className="overflow-x-auto no-scrollbar mt-8 pb-4">
-        <div className="flex items-center gap-4 w-max px-4">
+      <p className="text-xl font-semibold mt-20 tracking-tight bg-gradient-to-r from-white to-primary/70 bg-clip-text text-transparent w-max">Cast</p>
+      <div className="relative mt-8">
+        <div className="overflow-x-auto no-scrollbar pb-4">
+          <div className="flex items-center gap-6 w-max px-4 pr-16">
           {movie.casts.slice(0, 12).map((cast, index) => (
-            <div key={index} className="flex flex-col items-center text-center">
-              <img
-                src={image_base_url + cast.profile_path}
-                alt={cast.name}
-                className="rounded-full h-20 md:h-20 aspect-square object-cover"
-              />
-              <p className="font-medium text-xs mt-3">{cast.name}</p>
+            <div key={index} className="group flex flex-col items-center text-center">
+              <div className="relative">
+                <span className="pointer-events-none absolute -inset-1 rounded-full bg-primary/25 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+                {cast.profile_path ? (
+                  <img
+                    src={image_base_url + cast.profile_path}
+                    alt={cast.name}
+                    className="relative rounded-full h-20 md:h-20 aspect-square object-cover ring-1 ring-white/15 group-hover:ring-primary/60 transition-all duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="relative rounded-full h-20 w-20 flex items-center justify-center bg-white/5 ring-1 ring-white/15 text-sm text-gray-400 group-hover:ring-primary/60 transition-all duration-300 group-hover:scale-105">{cast.name?.[0] || "?"}</div>
+                )}
+              </div>
+              <p className="font-medium text-xs mt-3 text-gray-200">{cast.name}</p>
             </div>
           ))}
+          </div>
         </div>
+        {/* Scroll hint: right-edge fade + chevron */}
+        {movie.casts?.length > 6 && (
+          <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-20 fade-right-edge flex items-center justify-end">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 border border-white/15 text-gray-200 animate-pulse">
+              <ChevronRight className="w-5 h-5" />
+            </span>
+          </div>
+        )}
       </div>
 
       {/* DATE PICKER */}
       <DateSelect dateTime={show.dateTime} onDateChange={setSelectedDate} />
 
       {/* THEATER & TIME CARDS */}
-      <section className="mt-10">
+      <section className="mt-12 max-w-6xl mx-auto">
         <div
           className="
-            rounded-2xl border border-white/10 
-            bg-gradient-to-br from-black/70 via-black/60 to-black/80
-            p-6 md:p-7
-            shadow-[0_0_45px_-15px_rgba(0,0,0,0.9)]
+            relative overflow-hidden
+            rounded-3xl border border-primary/20
+            bg-gradient-to-br from-[#15101c] via-[#0b0910] to-black
+            p-6 md:p-9
+            shadow-[0_25px_80px_-30px_rgba(168,85,247,0.45)]
           "
         >
+          {/* Decorative ambient glows */}
+          <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-primary/20 blur-[90px]" />
+          <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-primary/10 blur-[90px]" />
+
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-            <div>
-              <p className="text-base md:text-lg font-semibold text-white">
-                Showtimes
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Select a date above to see all theaters & timings.
-              </p>
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 shadow-[0_0_25px_-6px_rgba(168,85,247,0.6)]">
+                <Clapperboard className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-semibold tracking-tight bg-gradient-to-r from-white via-white to-primary/70 bg-clip-text text-transparent">
+                  Showtimes
+                </h2>
+                <p className="text-[11px] md:text-xs uppercase tracking-[0.22em] text-gray-400 mt-1">
+                  Theaters &amp; timings in {city}
+                </p>
+              </div>
             </div>
             {selectedDate && (
-              <span className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/15 text-gray-200">
+              <span className="inline-flex items-center gap-2 self-start md:self-auto text-xs px-4 py-2 rounded-full bg-white/5 border border-primary/25 text-gray-100 backdrop-blur-sm shadow-[0_0_20px_-10px_rgba(168,85,247,0.7)]">
+                <Clock className="w-3.5 h-3.5 text-primary" />
                 {new Date(selectedDate).toLocaleDateString("en-GB", {
                   weekday: "short",
                   day: "2-digit",
@@ -371,87 +472,153 @@ const MovieDetails = () => {
           </div>
 
           {!selectedDate ? (
-            <p className="text-sm text-gray-400">
+            <p className="relative text-sm text-gray-400">
               Please select a date to view showtimes.
             </p>
           ) : groupedByTheater.length === 0 ? (
-            <p className="text-sm text-gray-400">
-              No shows available for this date. Try another day.
+            <p className="relative text-sm text-gray-400">
+              No shows in <span className="text-primary font-medium">{city}</span> for this date. Try another day or switch your city.
             </p>
           ) : (
-            <div className="space-y-6">
+            <div className="relative space-y-6">
+              {/* Language filter */}
+              {availableLanguages.length > 1 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mr-1">Language</span>
+                  {["All", ...availableLanguages].map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => setSelectedLang(l)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition cursor-pointer ${
+                        selectedLang === l
+                          ? "bg-primary/20 text-primary border-primary/40"
+                          : "bg-white/5 text-gray-300 border-white/10 hover:border-primary/30"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* Availability legend */}
+              <div className="flex flex-wrap items-center gap-4 text-[11px] text-gray-400 pb-1">
+                <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Available</span>
+                <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Filling fast</span>
+                <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Almost full</span>
+              </div>
               {groupedByTheater.map((theater) => (
                 <div
                   key={theater.theaterName}
                   className="
-                    rounded-xl border border-white/12 
-                    bg-black/55 p-4 md:p-5
+                    group relative overflow-hidden
+                    rounded-2xl border border-white/10
+                    bg-gradient-to-br from-white/[0.07] to-white/[0.02]
+                    p-5 md:p-6
+                    backdrop-blur-sm
+                    transition-all duration-300
+                    hover:border-primary/40
+                    hover:shadow-[0_20px_60px_-30px_rgba(168,85,247,0.6)]
                   "
                 >
+                  {/* Accent bar */}
+                  <span className="absolute left-0 top-6 bottom-6 w-[3px] rounded-full bg-gradient-to-b from-primary to-primary-dull opacity-70 group-hover:opacity-100 transition-opacity" />
+
                   {/* Theater header card */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5 pl-3">
                     <div>
-                      <p className="text-sm md:text-base font-semibold text-white">
+                      <p className="text-base md:text-lg font-semibold text-white tracking-tight">
                         {theater.theaterName}
                       </p>
-                      <p className="text-[11px] text-gray-400 mt-1">
+                      <p className="flex items-center gap-1.5 text-[11px] text-gray-400 mt-1">
+                        <MapPin className="w-3 h-3 text-primary/70" />
                         {theater.city && theater.address
                           ? `${theater.address}, ${theater.city}`
                           : theater.city || theater.address || "Nearby cinema"}
                       </p>
+                      {/* Amenities */}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                        {["M-Ticket", "F&B", "Parking", "Wheelchair", "Dolby 7.1"].map((a) => (
+                          <span
+                            key={a}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white/5 border border-white/10 text-gray-300"
+                          >
+                            {a}
+                          </span>
+                        ))}
+                      </div>
                     </div>
+                    <span className="inline-flex items-center gap-1.5 self-start whitespace-nowrap text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300">
+                      <ShieldCheck className="w-3 h-3" />
+                      Cancellation available
+                    </span>
                   </div>
 
-                  {/* Time slots card */}
+                  {/* Time slots card — grouped by part of day */}
                   <div
                     className="
-                      rounded-lg border border-white/10 
-                      bg-white/5 px-3 py-3 md:px-4 md:py-4
+                      rounded-xl border border-white/10
+                      bg-black/30 px-3 py-4 md:px-4 md:py-5 ml-3
                     "
                   >
-                    {chunk(theater.slots, 5).map((row, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className="
-                          flex flex-wrap justify-center md:justify-start
-                          gap-2 md:gap-3 mb-2 last:mb-0
-                        "
-                      >
-                        {row.map((slot) => {
-                          const dateObj = new Date(slot.time);
-                          const timeLabel = isNaN(dateObj.getTime())
-                            ? slot.time
-                            : dateObj.toTimeString().slice(0, 5);
+                    {PARTS_OF_DAY.map((part) => {
+                      const partSlots = theater.slots.filter(
+                        (s) => partOfDay(s.time) === part
+                      );
+                      if (!partSlots.length) return null;
 
-                          return (
-                            <button
-                              key={slot.id}
-                              onClick={() => handleTimeClick(slot)}
-                              className="
-                                flex flex-col items-center justify-center
-                                min-w-[4.3rem] px-2 py-1.5
-                                rounded-md border text-[11px]
-                                bg-black/40 hover:bg-black/70 
-                                border-white/20 hover:border-primary
-                                text-gray-100
-                                transition cursor-pointer
-                              "
-                            >
-                              <span className="text-xs font-semibold">
-                                {timeLabel}
-                              </span>
-                              <span className="text-[10px] text-primary mt-0.5">
-                                {slot.experience || "Laser"}
-                              </span>
-                              <span className="text-[10px] text-gray-400">
-                                {slot.format || "2D"}
-                              </span>
-                              {/* Price intentionally NOT shown here; handled on seat booking page */}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ))}
+                      return (
+                        <div key={part} className="mb-4 last:mb-0">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-2.5">
+                            {part}
+                          </p>
+                          <div className="flex flex-wrap justify-center md:justify-start gap-2.5 md:gap-3">
+                            {partSlots.map((slot) => {
+                              const dateObj = new Date(slot.time);
+                              const timeLabel = isNaN(dateObj.getTime())
+                                ? slot.time
+                                : dateObj.toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  });
+                              const avail = availabilityFromRatio(seatPressure(slot.id));
+
+                              return (
+                                <button
+                                  key={slot.id}
+                                  onClick={() => handleTimeClick(slot)}
+                                  title={`${formatScreen(slot.experience, slot.format)} • ${slot.language} • ${avail.label}`}
+                                  className="
+                                    group/slot relative flex flex-col items-center justify-center
+                                    min-w-[5.2rem] px-3 py-2
+                                    rounded-xl border
+                                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
+                                    border-white/15
+                                    text-gray-100
+                                    transition-all duration-300
+                                    hover:-translate-y-0.5
+                                    hover:border-primary
+                                    hover:shadow-[0_10px_30px_-12px_rgba(168,85,247,0.85)]
+                                    hover:from-primary/25 hover:to-primary/5
+                                    cursor-pointer
+                                  "
+                                >
+                                  <span className="flex items-center gap-1.5 text-sm font-semibold tracking-tight">
+                                    <span className={`h-1.5 w-1.5 rounded-full ${avail.dot}`} />
+                                    {timeLabel}
+                                  </span>
+                                  <span className="text-[10px] font-medium text-primary mt-0.5">
+                                    {formatScreen(slot.experience, slot.format)}
+                                  </span>
+                                  <span className="text-[10px] text-gray-400">
+                                    {slot.language}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -460,8 +627,11 @@ const MovieDetails = () => {
         </div>
       </section>
 
+      {/* RATINGS & REVIEWS */}
+      <MovieReviews movie={movie} />
+
       {/* YOU MAY ALSO LIKE */}
-      <p className="text-lg font-medium mt-20 mb-8">You May Also Like</p>
+      <p className="text-xl font-semibold mt-20 mb-8 tracking-tight bg-gradient-to-r from-white to-primary/70 bg-clip-text text-transparent w-max">You May Also Like</p>
       <div className="flex flex-wrap max-sm:justify-center gap-8 mb-15">
         {shows.slice(0, 4).map((m, index) => (
           <MovieCard key={index} movie={m} />

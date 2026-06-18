@@ -1,10 +1,11 @@
 // pages/SeatLayout.jsx - Interactive seat selection page with real-time availability via SSE
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowRightIcon, ClockIcon } from "lucide-react";
+import { ArrowRightIcon, ArrowLeftIcon, ClockIcon } from "lucide-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
+import { formatScreen } from "../lib/screenLabel";
 import BlurCircle from "../components/BlurCircle";
-import Loading from "../components/Loading";
+import FoodAddon from "../components/FoodAddon";
 import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 import { assets } from "../assets/assets";
@@ -38,11 +39,11 @@ const getExperienceLayout = (experience, basePrice) => {
   const bp = Number.isFinite(Number(basePrice)) ? Number(basePrice) : 0;
   const sliceRows = (start, count) => rowsAlphabet.slice(start, start + count);
   const colors = {
-    executive: "bg-amber-600",
-    club: "bg-sky-600",
-    royale: "bg-violet-600",
-    insignia: "bg-emerald-600",
-    prime: "bg-rose-600",
+    executive: "bg-[#8D8278]",
+    club: "bg-[#C49A6C]",
+    royale: "bg-[#CDA0A0]",
+    insignia: "bg-[#D4A290]",
+    prime: "bg-[#E3C078]",
   };
 
   const laser = {
@@ -110,7 +111,7 @@ const SeatLayout = () => {
   const { id, date } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { axios, getToken, user, image_base_url } = useAppContext();
+  const { axios, getToken, user, image_base_url, city } = useAppContext();
   const currency = import.meta.env.VITE_CURRENCY || "₹";
 
   // stable hooks
@@ -126,6 +127,7 @@ const SeatLayout = () => {
 
   const [cardHiddenLocal, setCardHiddenLocal] = useState(false); // hides the UI card only (no release)
   const [actionLoading, setActionLoading] = useState({ active: false, message: "" });
+  const [foodSummary, setFoodSummary] = useState({ total: 0, count: 0 });
 
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const queryShowId = query.get("showId");
@@ -292,8 +294,10 @@ const SeatLayout = () => {
     // 🔥 RESTORE SERVER HOLD FIRST
     axios.get(`/api/booking/seats/${showId}`).then(({ data }) => {
       if (data?.success && Array.isArray(data.heldSeats)) {
+        // Held seats store the Clerk user id (user.id), not user._id
+        const myId = user?.id ?? user?._id;
         const mine = data.heldSeats.find(
-          h => String(h.user) === String(user?._id)
+          h => String(h.user) === String(myId)
         )
         if (mine) {
           setTempHold({
@@ -464,6 +468,7 @@ const SeatLayout = () => {
         {
           showId: resolvedShowId,
           selectedSeats,
+          addonAmount: foodSummary.total || 0,
         },
         {
           headers: {
@@ -506,6 +511,7 @@ const SeatLayout = () => {
           (acc, s) => acc + (getSeatPrice(s) || 0),
           0
         ),
+        addonAmount: foodSummary.total || 0,
         expiresAt: new Date(data.expiresAt).getTime(),
         paymentLink: data.paymentLink,
       };
@@ -657,11 +663,11 @@ const SeatLayout = () => {
           <button
             onClick={() => handleSeatClick(seatId)}
             aria-label={tooltipText}
-            className={`h-9 w-9 rounded border text-xs flex items-center justify-center transition-transform
+            className={`h-9 w-9 rounded-t-lg rounded-b-sm border text-[11px] flex items-center justify-center transition-transform
               ${serverOcc ? "bg-white/6 text-gray-400 pointer-events-none cursor-not-allowed" : ""}
               ${localHeld ? "bg-transparent pointer-events-none" : ""}
-              ${selected ? "bg-teal-500 text-white border-teal-500 scale-105" : ""}
-              ${!serverOcc && !localHeld && !selected ? "bg-black/40 text-gray-100 hover:scale-110 cursor-pointer border-white/10" : ""}
+              ${selected ? "bg-primary text-black border-primary scale-105 shadow-[0_0_18px_-4px_rgba(168,85,247,0.9)]" : ""}
+              ${!serverOcc && !localHeld && !selected ? "bg-black/40 text-gray-100 hover:scale-110 cursor-pointer border-white/10 hover:border-primary/50" : ""}
             `}
           >
             {serverOcc ? "X" : localHeld ? (
@@ -672,7 +678,7 @@ const SeatLayout = () => {
             ) : seatId}
           </button>
 
-          <div aria-hidden className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-9 h-1 rounded ${sec ? sec.colorClass : "bg-sky-600"} opacity-30`} />
+          <div aria-hidden className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-9 h-1 rounded ${sec ? sec.colorClass : "bg-primary"} opacity-30`} />
 
           <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/90 text-white text-[11px] whitespace-nowrap opacity-0 pointer-events-none transition-opacity group-hover:opacity-100">
             {tooltipText}
@@ -691,20 +697,97 @@ const SeatLayout = () => {
     return <div key={rowLabel} className="flex justify-center items-center gap-2 mt-2">{seats}</div>;
   };
 
-  if (!showData) return <Loading />;
+  if (!showData) {
+    return (
+      <div className="flex flex-col items-center px-6 md:px-16 lg:px-32 py-30 md:pt-44 animate-pulse">
+        {/* banner */}
+        <div className="w-full max-w-4xl mb-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-28 rounded-xl bg-white/10" />
+            <div className="space-y-2">
+              <div className="h-6 w-48 rounded bg-white/10" />
+              <div className="h-3 w-32 rounded bg-white/5" />
+              <div className="h-3 w-24 rounded bg-white/5" />
+            </div>
+          </div>
+        </div>
+        {/* timings */}
+        <div className="w-full max-w-4xl rounded-2xl border border-white/10 bg-white/[0.03] p-5 mb-10">
+          <div className="h-3 w-40 rounded bg-white/10 mb-4" />
+          <div className="flex gap-3 overflow-hidden">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-12 w-24 shrink-0 rounded-xl bg-white/10" />
+            ))}
+          </div>
+        </div>
+        {/* screen */}
+        <div className="w-[70%] max-w-2xl h-2 rounded-full bg-white/10 mb-2" />
+        <div className="h-3 w-20 rounded bg-white/5 mb-10" />
+        {/* seat grid */}
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, r) => (
+            <div key={r} className="flex justify-center gap-2">
+              {Array.from({ length: 12 }).map((_, c) => (
+                <div key={c} className="w-7 h-7 rounded-md bg-white/10" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const movie = showData.movie || {};
   const posterUrl = movie.poster_path ? image_base_url + movie.poster_path : null;
   const theaterNameToShow = selectedTimeSlot?.theaterName || selectedTimeSlot?.theater?.name || (groupedByTheater[0]?.theaterName || "");
 
   return (
-    <div className="flex flex-col md:flex-row px-6 md:px-16 lg:px-40 py-30 md:pt-50">
-      {/* LEFT timings */}
-      <div className="w-60 bg-gradient-to-b from-slate-900/40 to-slate-900/20 border border-white/6 rounded-lg py-6 h-max md:sticky md:top-30">
-        <p className="text-lg font-semibold px-4">Timings — {theaterNameToShow || "Select a timing"}</p>
-        <div className="mt-4 divide-y divide-white/5">
+    <div className="flex flex-col items-center px-6 md:px-16 lg:px-32 py-30 md:pt-44">
+      {/* Back button */}
+      <div className="w-full max-w-4xl mb-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 hover:text-white transition cursor-pointer"
+        >
+          <ArrowLeftIcon className="w-4 h-4" /> Back
+        </button>
+      </div>
+
+      {/* Movie banner */}
+      <div className="w-full max-w-4xl mb-5 rounded-2xl border border-primary/20 bg-gradient-to-br from-[#15101c] to-black p-5 shadow-[0_20px_60px_-35px_rgba(168,85,247,0.5)]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {posterUrl ? (
+              <img src={posterUrl} alt={movie.title} className="w-20 h-28 object-cover rounded-xl ring-1 ring-white/15" />
+            ) : (
+              <div className="w-20 h-28 bg-white/5 rounded-xl flex items-center justify-center text-xs text-gray-400">No poster</div>
+            )}
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight bg-gradient-to-r from-white to-primary/70 bg-clip-text text-transparent w-max">{movie.title}</h2>
+              <p className="text-sm text-gray-300 mt-1">{theaterNameToShow || "Theater not selected"}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{date}{selectedTimeSlot && <> • {formatScreen(selectedTimeSlot.experience, selectedTimeSlot.format)}</>}</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            {selectedTimeSlot ? (
+              <>
+                <div className="text-lg font-semibold text-primary">{isoTimeFormat(selectedTimeSlot.time)}</div>
+                <div className="text-sm text-gray-400 mt-1">{formatScreen(selectedTimeSlot.experience, selectedTimeSlot.format)} • {selectedTimeSlot.language || "English"}</div>
+                {basePrice > 0 && <div className="text-xs text-gray-500 mt-1">Base: {currency} {basePrice}</div>}
+              </>
+            ) : <div className="text-sm text-gray-400">Select a timing</div>}
+          </div>
+        </div>
+      </div>
+
+      {/* timings bar */}
+      <div className="w-full max-w-4xl bg-gradient-to-br from-[#15101c] to-black border border-primary/15 rounded-2xl p-5 shadow-[0_20px_60px_-35px_rgba(168,85,247,0.5)]">
+        <p className="text-[11px] uppercase tracking-[0.24em] text-gray-400 mb-3 flex items-center gap-2"><ClockIcon className="w-3.5 h-3.5 text-primary" /> Showtimes — {theaterNameToShow || "Select a timing"}</p>
+        <div className="">
           {(() => {
-            const raw = rawSlotsForDate || [];
+            const raw = (rawSlotsForDate || []).filter(
+              (s) => !city || !s.theaterCity || s.theaterCity === city
+            );
             const now = Date.now();
 
             if (!selectedTimeSlot) {
@@ -726,15 +809,12 @@ const SeatLayout = () => {
               // show first theater group that has upcoming times (keeps original behavior)
               const entries = Array.from(per.values());
               return (
-                <div className="p-3 space-y-2">
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
                   {entries.flat().sort((a, b) => new Date(a.time) - new Date(b.time)).map((slot) => (
-                    <div key={slot.showId || slot._id || slot.time} onClick={() => setSelectedTimeSlot(slot)} className="flex items-center gap-2 px-3 py-2 rounded cursor-pointer hover:bg-teal-600/10">
-                      <ClockIcon className="w-4 h-4" />
-                      <div className="text-sm">
-                        <div className="font-semibold">{isoTimeFormat(slot.time)}</div>
-                        <div className="text-xs text-gray-300">{slot.experience || slot.screenType || "Laser"} • {slot.format || "2D"}</div>
-                      </div>
-                    </div>
+                    <button key={slot.showId || slot._id || slot.time} onClick={() => setSelectedTimeSlot(slot)} className="shrink-0 flex flex-col items-start gap-0.5 px-4 py-2.5 rounded-xl border border-white/12 bg-white/5 hover:border-primary/50 hover:bg-primary/10 transition cursor-pointer">
+                      <span className="text-sm font-semibold">{isoTimeFormat(slot.time)}</span>
+                      <span className="text-[10px] text-gray-400">{formatScreen(slot.experience || slot.screenType, slot.format)} • {slot.language || "English"}</span>
+                    </button>
                   ))}
                 </div>
               );
@@ -753,16 +833,16 @@ const SeatLayout = () => {
               if (!arr.length) return <div className="p-4 text-sm text-gray-400">No upcoming timings for this theater on selected date.</div>;
 
               return (
-                <div className="p-3 space-y-2">
-                  {arr.map((slot) => (
-                    <div key={slot.showId || slot._id || slot.time} onClick={() => setSelectedTimeSlot(slot)} className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition ${String(slot.showId || slot._id) === String(selectedTimeSlot.showId || selectedTimeSlot._id) ? "bg-teal-600 text-white" : "hover:bg-teal-600/10"}`}>
-                      <ClockIcon className="w-4 h-4" />
-                      <div className="text-sm">
-                        <div className="font-semibold">{isoTimeFormat(slot.time)}</div>
-                        <div className="text-xs text-gray-300">{slot.experience || slot.screenType || "Laser"} • {slot.format || "2D"}</div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                  {arr.map((slot) => {
+                    const active = String(slot.showId || slot._id) === String(selectedTimeSlot.showId || selectedTimeSlot._id);
+                    return (
+                    <button key={slot.showId || slot._id || slot.time} onClick={() => setSelectedTimeSlot(slot)} className={`shrink-0 flex flex-col items-start gap-0.5 px-4 py-2.5 rounded-xl border transition cursor-pointer ${active ? "bg-gradient-to-b from-primary to-primary-dull text-black border-primary shadow-[0_10px_25px_-10px_rgba(168,85,247,0.9)]" : "border-white/12 bg-white/5 hover:border-primary/50 hover:bg-primary/10"}`}>
+                      <span className="text-sm font-semibold">{isoTimeFormat(slot.time)}</span>
+                      <span className={`text-[10px] ${active ? "text-black/70" : "text-gray-400"}`}>{formatScreen(slot.experience || slot.screenType, slot.format)} • {slot.language || "English"}</span>
+                    </button>
+                    );
+                  })}
                 </div>
               );
             }
@@ -771,37 +851,9 @@ const SeatLayout = () => {
       </div>
 
       {/* RIGHT seats */}
-      <div className="relative flex-1 flex flex-col items-center max-md:mt-16">
+      <div className="relative w-full flex flex-col items-center mt-8">
         <BlurCircle top="-100px" left="-100px" />
         <BlurCircle bottom="0" right="0" />
-
-        {/* header sticky */}
-        <div className="w-full max-w-4xl mb-2 rounded-lg border border-white/10 bg-gradient-to-br from-black/80 to-slate-900/80 p-4 sticky top-6 z-20">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              {posterUrl ? (
-                <img src={posterUrl} alt={movie.title} className="w-20 h-28 object-cover rounded" />
-              ) : (
-                <div className="w-20 h-28 bg-white/5 rounded flex items-center justify-center text-xs text-gray-400">No poster</div>
-              )}
-              <div>
-                <h2 className="text-xl font-semibold">{movie.title}</h2>
-                <p className="text-sm text-gray-400 mt-1">{theaterNameToShow || "Theater not selected"}</p>
-                <p className="text-xs text-gray-500 mt-1">{date}{selectedTimeSlot && <> • {selectedTimeSlot.experience?.toUpperCase()}</>}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-end">
-              {selectedTimeSlot ? (
-                <>
-                  <div className="text-lg font-semibold">{isoTimeFormat(selectedTimeSlot.time)}</div>
-                  <div className="text-sm text-gray-400 mt-1">{selectedTimeSlot.experience || "Laser"} • {selectedTimeSlot.format || "2D"}</div>
-                  {basePrice > 0 && <div className="text-xs text-gray-400 mt-1">Base ticket: {currency} {basePrice}</div>}
-                </>
-              ) : <div className="text-sm text-gray-400">Select a timing</div>}
-            </div>
-          </div>
-        </div>
 
         {/* legend */}
         <div className="w-full max-w-4xl mx-auto mb-4 flex justify-center">
@@ -824,16 +876,17 @@ const SeatLayout = () => {
               <div className="text-xs text-gray-300">Held</div>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-black/50 border border-white/10">
-              <div className="w-4 h-4 bg-teal-500 rounded" />
+              <div className="w-4 h-4 bg-primary rounded" />
               <div className="text-xs text-gray-300">Selected</div>
             </div>
           </div>
         </div>
 
         {/* screen */}
-        <div className="flex flex-col items-center w-full max-w-4xl mb-4">
-          <img src={assets.screenImage} alt="screen" className="max-w-full" />
-          <p className="text-gray-400 text-sm mt-2">SCREEN SIDE</p>
+        <div className="flex flex-col items-center w-full max-w-3xl mb-12 mt-2">
+          <div className="w-full h-12 rounded-[100%] bg-gradient-to-b from-primary/40 to-transparent blur-[3px]" />
+          <div className="w-[85%] h-[3px] -mt-6 rounded-full bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_45px_6px_rgba(168,85,247,0.55)]" />
+          <p className="text-gray-400 text-xs tracking-[0.5em] mt-5 pl-2">S C R E E N</p>
         </div>
 
         {/* seat layout */}
@@ -846,50 +899,40 @@ const SeatLayout = () => {
           ))}
         </div>
 
+        {/* Food & beverages add-on */}
+        <FoodAddon
+          currency={currency}
+          disabled={!selectedSeats.length}
+          onTotalChange={setFoodSummary}
+        />
+
         {/* mobile summary */}
-        <div className="mt-8 block md:hidden w-full max-w-4xl">
-          <div className="flex items-center justify-between bg-black/60 border border-white/10 rounded-lg px-4 py-3">
-            <div>
-              <div className="text-xs text-gray-400">Selected</div>
-              <div className="font-medium">{selectedSeats.join(", ") || (tempHold ? tempHold.seats.join(", ") : "None")}</div>
-              <div className="text-xs text-gray-400">{selectedBreakdown.items.length} seat(s)</div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-semibold">{currency} {selectedBreakdown.total}</div>
-              <button onClick={() => bookTickets()} disabled={!selectedSeats.length} className={`mt-2 px-4 py-2 rounded-full text-white ${selectedSeats.length ? "bg-teal-600 hover:bg-teal-500 cursor-pointer" : "bg-white/10 cursor-not-allowed"}`}>Proceed</button>
-            </div>
-          </div>
-        </div>
+        {/* (replaced by sticky bottom checkout bar) */}
 
-        {/* desktop sticky selection summary */}
-        <div className={`hidden md:block fixed right-8 bottom-8 w-80 bg-black/95 border border-white/10 rounded-lg p-4 shadow-lg z-50 transform transition-all duration-350 ${selectedSeats.length ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"}`} aria-hidden={!selectedSeats.length}>
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <div className="text-xs text-gray-400">Your selection</div>
-              <div className="font-medium">{selectedSeats.length} seat(s)</div>
+        {/* sticky bottom checkout bar */}
+        <div className={`fixed bottom-0 left-0 w-full z-40 transition-all duration-300 ${selectedSeats.length ? "translate-y-0" : "translate-y-full pointer-events-none"}`} aria-hidden={!selectedSeats.length}>
+          <div className="mx-auto max-w-5xl m-4 rounded-2xl border border-primary/25 bg-black/80 backdrop-blur-xl shadow-[0_-10px_60px_-20px_rgba(168,85,247,0.6)] px-5 py-4 flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-gray-400">Selected Seats</div>
+              <div className="font-medium text-sm truncate text-primary">{selectedSeats.join(", ") || "None"}</div>
+              <div className="text-[11px] text-gray-500">{selectedBreakdown.items.length} seat(s) • incl. zone pricing</div>
             </div>
-            <div className="text-right">
-              <div className="text-sm font-semibold">{currency} {selectedBreakdown.total}</div>
-              <div className="text-xs text-gray-400">incl. zone pricing</div>
-            </div>
-          </div>
-
-          <div className="max-h-32 overflow-y-auto mb-3">
-            {selectedBreakdown.items.length === 0 ? <div className="text-xs text-gray-400">No seats selected</div> : selectedBreakdown.items.map((it) => (
-              <div key={it.seat} className="flex items-center justify-between text-xs py-1 border-b border-white/5">
-                <div className="font-medium">{it.seat}</div>
-                <div className="text-gray-300">{currency} {it.price}</div>
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="text-right">
+                <div className="text-[11px] text-gray-400">Total</div>
+                <div className="text-xl font-semibold">{currency} {selectedBreakdown.total + foodSummary.total}</div>
+                {foodSummary.total > 0 && (
+                  <div className="text-[10px] text-gray-500">
+                    Tickets {currency}{selectedBreakdown.total} + Snacks {currency}{foodSummary.total}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 justify-between">
-            <button onClick={() => { setSelectedSeats([]); try { localStorage.removeItem(LS.SELECTED_SEATS(id, date)); } catch (e) { } }} className="px-3 py-1 rounded-md border border-white/10 text-xs hover:bg-white/5 cursor-pointer">Clear</button>
-
-            <button onClick={() => { if (!selectedSeats.length) { toast.error("Select seats first"); return; } bookTickets(); }} disabled={!selectedSeats.length} className={`px-4 py-2 rounded-full text-white text-sm ${selectedSeats.length ? "bg-teal-600 hover:bg-teal-500 cursor-pointer" : "bg-white/10 cursor-not-allowed"}`}>
-              Proceed to Checkout
-              <ArrowRightIcon className="w-4 h-4 inline-block ml-2" />
-            </button>
+              <button onClick={() => { setSelectedSeats([]); try { localStorage.removeItem(LS.SELECTED_SEATS(id, date)); } catch (e) { } }} className="px-3 py-2 rounded-xl border border-white/15 text-xs hover:bg-white/5 cursor-pointer">Clear</button>
+              <button onClick={() => { if (!selectedSeats.length) { toast.error("Select seats first"); return; } bookTickets(); }} disabled={!selectedSeats.length} className="px-6 py-2.5 rounded-xl bg-gradient-to-b from-primary to-primary-dull text-black font-semibold text-sm cursor-pointer hover:brightness-105 active:scale-95 shadow-[0_10px_30px_-10px_rgba(168,85,247,0.9)]">
+                Proceed to Checkout
+                <ArrowRightIcon className="w-4 h-4 inline-block ml-2" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -934,7 +977,7 @@ const SeatLayout = () => {
                     e.stopPropagation();
                     window.location.href = tempHold.paymentLink;
                   }}
-                  className="px-4 py-1 rounded-md bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold cursor-pointer"
+                  className="px-4 py-1 rounded-md bg-primary hover:bg-primary-dull text-black text-sm font-semibold cursor-pointer"
                 >
                   Pay Now
                 </button>
@@ -979,7 +1022,7 @@ const SeatLayout = () => {
             <div className="relative z-10 flex flex-col items-center">
               {/* SPINNER */}
               <svg
-                className="animate-spin h-12 w-12 text-white"
+                className="animate-spin h-12 w-12 text-primary"
                 viewBox="0 0 24 24"
                 fill="none"
               >
@@ -987,12 +1030,13 @@ const SeatLayout = () => {
                   cx="12"
                   cy="12"
                   r="10"
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="currentColor"
+                  strokeOpacity="0.25"
                   strokeWidth="2.5"
                 />
                 <path
                   d="M22 12a10 10 0 0 0-10-10"
-                  stroke="white"
+                  stroke="currentColor"
                   strokeWidth="3"
                   strokeLinecap="round"
                 />

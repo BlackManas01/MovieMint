@@ -35,3 +35,18 @@ cron.schedule("*/2 * * * *", async () => {
 
     console.log("✅ Expired holds cleaned. Occupied seats untouched.");
 });
+
+// Runs hourly: permanently purges Recycle Bin bookings older than 30 days
+cron.schedule("0 * * * *", async () => {
+    try {
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const result = await Booking.deleteMany({
+            deletedAt: { $ne: null, $lte: cutoff },
+        });
+        if (result.deletedCount) {
+            console.log(`🗑️ Purged ${result.deletedCount} booking(s) from Recycle Bin (>30 days).`);
+        }
+    } catch (err) {
+        console.error("Recycle Bin purge error:", err.message);
+    }
+});

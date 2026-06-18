@@ -3,8 +3,40 @@
 
 
 @theme {
-  --color-primary: #F84565;
-  --color-primary-dull: #D63854;
+  --color-primary: #C084FC;
+  --color-primary-dull: #A855F7;
+}
+
+/* Theme-aware page surface (RGB channels) used for smooth, haze-free fades */
+:root {
+  --surface-rgb: 9 9 11;
+}
+
+/* Clean alpha-only fades (no transparent-black gray haze) */
+.surface-fade-up {
+  background-image: linear-gradient(to top, rgb(var(--surface-rgb)), rgb(var(--surface-rgb) / 0));
+}
+.surface-fade-down {
+  background-image: linear-gradient(to bottom, rgb(var(--surface-rgb)), rgb(var(--surface-rgb) / 0));
+}
+
+/* Right-edge fade to hint there is more horizontally-scrollable content */
+.fade-right-edge {
+  background-image: linear-gradient(to left, rgb(var(--surface-rgb)), rgb(var(--surface-rgb) / 0));
+}
+
+/* Floating navbar chips: theme-aware glass backing for individual nav items */
+.nav-chip {
+  background-color: rgb(var(--surface-rgb) / 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(140 140 150 / 0.2);
+}
+@media (min-width: 768px) {
+  .nav-chip-md {
+    background-color: rgb(var(--surface-rgb) / 0.82);
+    border: 1px solid rgb(140 140 150 / 0.2);
+  }
 }
 
 * {
@@ -22,6 +54,23 @@ body {
   scrollbar-width: none;
 }
 
+/* Accessibility: visible keyboard focus ring */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Elegant gradient text shading for headings/titles */
+.text-shade {
+  background-image: linear-gradient(105deg, #ffffff 0%, #f3e8ff 45%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  width: fit-content;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -29,4 +78,147 @@ input::-webkit-inner-spin-button {
 
 ::-webkit-calendar-picker-indicator {
   filter: invert(1);
+}
+
+/* =========================================================================
+   LIGHT MODE
+   Dark mode is the default (untouched). These rules only apply under
+   html.light and remap the dark utilities the app actually uses.
+   ========================================================================= */
+html.light body {
+  background-color: #f4f4f7;
+  color: #1b1b1f;
+}
+
+/* Light-mode accent: the pale purple washes out on white, so use a warm brown */
+html.light {
+  --color-primary: #8C5E3C;
+  --color-primary-dull: #6E4A2E;
+  --surface-rgb: 244 244 247;
+}
+
+/* Primary buttons use black text (great on the light dark-mode purple);
+   on the deeper light-mode indigo, white text reads better. */
+html.light .bg-primary.text-black { color: #ffffff; }
+
+html.light,
+html.light * {
+  scrollbar-color: #c9c9d1 #ededf2;
+}
+
+html.light ::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+/* Gradient title shading: dark text -> accent on light bg */
+html.light .text-shade {
+  background-image: linear-gradient(105deg, #1b1b1f 0%, #6e4a2e 55%, var(--color-primary) 100%);
+}
+
+/* ---- Page backgrounds ---- */
+html.light .bg-\[\#08090d\],
+html.light .bg-\[\#070b0a\] {
+  background-color: #f4f4f7 !important;
+}
+
+/* ---- Solid translucent white surfaces -> subtle dark tints ---- */
+html.light .bg-white\/5 { background-color: rgba(17, 17, 24, 0.04); }
+html.light .bg-white\/6 { background-color: rgba(17, 17, 24, 0.045); }
+html.light .bg-white\/8 { background-color: rgba(17, 17, 24, 0.05); }
+html.light .bg-white\/10 { background-color: rgba(17, 17, 24, 0.06); }
+html.light .bg-white\/12 { background-color: rgba(17, 17, 24, 0.07); }
+html.light .bg-white\/15 { background-color: rgba(17, 17, 24, 0.09); }
+html.light .bg-white\/20 { background-color: rgba(17, 17, 24, 0.10); }
+html.light .bg-white\/\[0\.02\] { background-color: rgba(17, 17, 24, 0.025); }
+html.light .bg-white\/\[0\.03\] { background-color: rgba(17, 17, 24, 0.035); }
+html.light .bg-white\/\[0\.04\] { background-color: rgba(17, 17, 24, 0.04); }
+html.light .bg-white\/\[0\.05\] { background-color: rgba(17, 17, 24, 0.05); }
+html.light .bg-white\/\[0\.06\] { background-color: rgba(17, 17, 24, 0.05); }
+html.light .bg-white\/\[0\.08\] { background-color: rgba(17, 17, 24, 0.06); }
+
+html.light .hover\:bg-white\/5:hover { background-color: rgba(17, 17, 24, 0.05); }
+html.light .hover\:bg-white\/8:hover { background-color: rgba(17, 17, 24, 0.06); }
+html.light .hover\:bg-white\/10:hover { background-color: rgba(17, 17, 24, 0.07); }
+html.light .hover\:bg-white\/\[0\.05\]:hover { background-color: rgba(17, 17, 24, 0.05); }
+
+/* ---- Solid gray surfaces (cards, skeletons) -> light ---- */
+html.light .bg-gray-600 { background-color: #d6d6de; }
+html.light .bg-gray-700 { background-color: #e3e3ea; }
+html.light .bg-gray-800 { background-color: #ececf1; }
+html.light .bg-gray-900 { background-color: #f0f0f4; }
+html.light .bg-gray-800\/70 { background-color: rgba(236, 236, 241, 0.82); }
+html.light .bg-gray-900\/60 { background-color: rgba(240, 240, 244, 0.7); }
+html.light .hover\:bg-gray-600:hover { background-color: #cfcfd8; }
+html.light .hover\:bg-gray-700:hover { background-color: #dadae2; }
+
+/* ---- Translucent black overlays/surfaces -> light ---- */
+html.light .bg-black { background-color: #f4f4f7; }
+html.light .bg-black\/10 { background-color: rgba(17, 17, 24, 0.03); }
+html.light .bg-black\/20 { background-color: rgba(17, 17, 24, 0.04); }
+html.light .bg-black\/30 { background-color: rgba(17, 17, 24, 0.05); }
+html.light .bg-black\/40 { background-color: rgba(17, 17, 24, 0.05); }
+html.light .bg-black\/50 { background-color: rgba(17, 17, 24, 0.05); }
+html.light .bg-black\/60 { background-color: rgba(17, 17, 24, 0.06); }
+html.light .bg-black\/70 { background-color: rgba(255, 255, 255, 0.78); }
+html.light .bg-black\/80 { background-color: rgba(255, 255, 255, 0.88); }
+html.light .bg-black\/90 { background-color: rgba(255, 255, 255, 0.96); }
+html.light .bg-black\/95 { background-color: rgba(255, 255, 255, 0.97); }
+html.light .hover\:bg-black\/30:hover { background-color: rgba(17, 17, 24, 0.06); }
+
+/* ---- Borders ---- */
+html.light .border-white\/5 { border-color: rgba(17, 17, 24, 0.06); }
+html.light .border-white\/10 { border-color: rgba(17, 17, 24, 0.10); }
+html.light .border-white\/12 { border-color: rgba(17, 17, 24, 0.12); }
+html.light .border-white\/15 { border-color: rgba(17, 17, 24, 0.12); }
+html.light .border-white\/20 { border-color: rgba(17, 17, 24, 0.15); }
+html.light .border-white\/\[0\.08\] { border-color: rgba(17, 17, 24, 0.09); }
+html.light .border-gray-300\/20 { border-color: rgba(17, 17, 24, 0.12); }
+html.light .border-gray-700\/40 { border-color: rgba(17, 17, 24, 0.12); }
+
+/* ---- Text colors ---- */
+html.light .text-white { color: #1b1b1f; }
+html.light .text-white\/90 { color: rgba(27, 27, 31, 0.9); }
+html.light .text-white\/80 { color: rgba(27, 27, 31, 0.8); }
+html.light .text-white\/70 { color: rgba(27, 27, 31, 0.7); }
+html.light .text-white\/60 { color: rgba(27, 27, 31, 0.6); }
+html.light .text-white\/50 { color: rgba(27, 27, 31, 0.5); }
+html.light .text-white\/30 { color: rgba(27, 27, 31, 0.4); }
+html.light .text-gray-100 { color: #27272a; }
+html.light .text-gray-200 { color: #3f3f46; }
+html.light .text-gray-300 { color: #52525b; }
+html.light .text-gray-400 { color: #6b7280; }
+html.light .text-gray-500 { color: #71717a; }
+
+/* ---- Accent text: deepen for contrast on light backgrounds ---- */
+html.light .text-violet-200 { color: #6d28d9; }
+html.light .text-violet-300 { color: #7c3aed; }
+html.light .text-violet-400 { color: #7c3aed; }
+html.light .text-amber-300 { color: #b45309; }
+html.light .text-amber-400 { color: #d97706; }
+html.light .text-emerald-400 { color: #059669; }
+html.light .text-red-400 { color: #dc2626; }
+html.light .text-orange-300 { color: #ea580c; }
+
+/* ---- Gradient stops (panels / titles / fades) ---- */
+html.light .from-white { --tw-gradient-from: #1b1b1f; }
+html.light .via-white { --tw-gradient-via: #1b1b1f; }
+html.light .from-black { --tw-gradient-from: #ffffff; }
+html.light .to-black { --tw-gradient-to: #ffffff; }
+html.light .via-black { --tw-gradient-via: #ffffff; }
+
+html.light .from-\[\#15101c\] { --tw-gradient-from: #faf6ff; }
+html.light .via-\[\#0b0910\] { --tw-gradient-via: #fbf9ff; }
+html.light .to-\[\#0b0910\] { --tw-gradient-to: #fbf9ff; }
+html.light .from-\[\#0b0910\] { --tw-gradient-from: #fbf9ff; }
+html.light .from-\[\#18121f\] { --tw-gradient-from: #faf6ff; }
+html.light .via-\[\#100b16\] { --tw-gradient-via: #fbf9ff; }
+html.light .from-\[\#0a0f0d\]\/95 { --tw-gradient-from: rgba(255, 255, 255, 0.95); }
+html.light .to-\[\#070b0a\]\/80 { --tw-gradient-to: rgba(244, 244, 247, 0.85); }
+html.light .from-\[\#09090B\] { --tw-gradient-from: #f4f4f7; }
+html.light .via-\[\#090a0f33\] { --tw-gradient-via: rgba(244, 244, 247, 0.2); }
+html.light .to-\[\#090a0f\] { --tw-gradient-to: #f4f4f7; }
+
+/* Over-hero nav pill: grey (not black) in light theme on desktop, so white text still reads */
+@media (min-width: 768px) {
+  html.light .md\:bg-black\/30 { background-color: rgba(82, 82, 92, 0.5); }
 }

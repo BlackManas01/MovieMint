@@ -57,7 +57,7 @@ const UpcomingMovieDetails = () => {
                 <p className="text-lg mb-4">{error || "Failed to load details"}</p>
 
                 <button
-                    onClick={() => navigate("/upcoming")}
+                    onClick={() => navigate(-1)}
                     className="px-6 py-2 bg-primary rounded-lg hover:bg-primary-dull transition cursor-pointer active:scale-95"
                 >
                     Go Back
@@ -65,10 +65,6 @@ const UpcomingMovieDetails = () => {
             </div>
         );
     }
-
-    const rating = movie.vote_average?.toFixed
-        ? movie.vote_average.toFixed(1)
-        : movie.vote_average ?? "N/A";
 
     const genresText = movie.genres
         ? movie.genres.map((g) => g.name).join(", ")
@@ -114,9 +110,9 @@ const UpcomingMovieDetails = () => {
 
                     <h1 className="text-4xl font-bold">{movie.title}</h1>
 
-                    <div className="flex items-center gap-2 text-gray-300">
-                        <StarIcon className="w-5 h-5 text-primary fill-primary" />
-                        {rating} Rating
+                    <div className="flex items-center gap-2 text-gray-400">
+                        <StarIcon className="w-5 h-5 text-gray-500" />
+                        Not yet rated
                     </div>
 
                     <p className="text-gray-400 text-sm leading-tight max-w-xl">
@@ -141,7 +137,7 @@ const UpcomingMovieDetails = () => {
                         )}
 
                         <button
-                            onClick={() => navigate("/upcoming")}
+                            onClick={() => navigate(-1)}
                             className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull rounded-lg transition cursor-pointer active:scale-95"
                         >
                             Back
@@ -157,11 +153,15 @@ const UpcomingMovieDetails = () => {
                     <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
                         {movie.casts.slice(0, 10).map((c, i) => (
                             <div key={i} className="text-center shrink-0">
-                                <img
+                                {c.profile_path ? (
+                                  <img
                                     src={image_base_url + c.profile_path}
                                     className="rounded-full h-20 w-20 object-cover border border-gray-700"
                                     alt={c.name}
-                                />
+                                  />
+                                ) : (
+                                  <div className="rounded-full h-20 w-20 flex items-center justify-center bg-white/5 border border-gray-700 text-sm text-gray-400 mx-auto">{c.name?.[0] || "?"}</div>
+                                )}
                                 <p className="text-xs text-gray-300 mt-2">{c.name}</p>
                             </div>
                         ))}

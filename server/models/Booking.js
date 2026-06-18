@@ -19,7 +19,8 @@ const bookingSchema = new mongoose.Schema({
     userSnapshot: {                                             // Snapshot of user info at booking time
         name: String,
         email: String
-    }
+    },
+    deletedAt: { type: Date, default: null },                  // Soft-delete timestamp (Recycle Bin); auto-purged after 30 days
 }, { timestamps: true });
 
 const Booking = mongoose.model("Booking", bookingSchema);

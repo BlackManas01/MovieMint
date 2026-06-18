@@ -45,7 +45,7 @@ export const getDashboardData = async (req, res) => {
 
         // 1) Bookings + Users
         const [paidBookings, totalUser] = await Promise.all([
-            Booking.find({ isPaid: true }).lean(),
+            Booking.find({ isPaid: true, deletedAt: null }).lean(),
             User.countDocuments(),
         ]);
 
@@ -141,7 +141,7 @@ export const getAllShows = async (req, res) => {
  */
 export const getAllBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find({})
+        const bookings = await Booking.find({ deletedAt: null })
             .populate("user", "name firstName lastName email")
             .populate({
                 path: "show",
@@ -156,6 +156,129 @@ export const getAllBookings = async (req, res) => {
         return res
             .status(500)
             .json({ success: false, message: "Failed to fetch bookings" });
+    }
+};
+
+/**
+ * GET /api/admin/bin-bookings
+ * Returns soft-deleted bookings (the Recycle Bin). Items are auto-purged
+ * after 30 days by the cron job, so everything here is within retention.
+ */
+export const getBinBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find({ deletedAt: { $ne: null } })
+            .populate("user", "name firstName lastName email")
+            .populate({
+                path: "show",
+                populate: { path: "movie", select: "title" },
+            })
+            .sort({ deletedAt: -1 })
+            .lean();
+
+        return res.json({ success: true, bookings, retentionDays: 30 });
+    } catch (error) {
+        console.error("getBinBookings error:", error);
+        return res
+            .status(500)
+            .json({ success: false, message: "Failed to fetch bin" });
+    }
+};
+
+/**
+ * POST /api/admin/bookings/soft-delete
+ * Body: { ids?: string[], fromDate?: ISO, toDate?: ISO }
+ * Moves matching bookings into the Recycle Bin (sets deletedAt = now).
+ * If `ids` is provided it takes precedence; otherwise a createdAt date range is used.
+ */
+export const softDeleteBookings = async (req, res) => {
+    try {
+        const { ids, fromDate, toDate } = req.body || {};
+        const filter = { deletedAt: null };
+
+        if (Array.isArray(ids) && ids.length) {
+            filter._id = { $in: ids };
+        } else if (fromDate || toDate) {
+            filter.createdAt = {};
+            if (fromDate) filter.createdAt.$gte = new Date(fromDate);
+            if (toDate) {
+                const end = new Date(toDate);
+                end.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = end;
+            }
+        } else {
+            return res
+                .status(400)
+                .json({ success: false, message: "Provide ids or a date range." });
+        }
+
+        const result = await Booking.updateMany(filter, {
+            $set: { deletedAt: new Date() },
+        });
+
+        return res.json({
+            success: true,
+            movedToBin: result.modifiedCount ?? result.nModified ?? 0,
+            message: "Bookings moved to Recycle Bin.",
+        });
+    } catch (error) {
+        console.error("softDeleteBookings error:", error);
+        return res
+            .status(500)
+            .json({ success: false, message: "Failed to delete bookings" });
+    }
+};
+
+/**
+ * POST /api/admin/bookings/restore
+ * Body: { ids: string[] }  (omit/empty ids to restore the entire bin)
+ * Restores bookings from the Recycle Bin (sets deletedAt = null).
+ */
+export const restoreBookings = async (req, res) => {
+    try {
+        const { ids } = req.body || {};
+        const filter = { deletedAt: { $ne: null } };
+        if (Array.isArray(ids) && ids.length) filter._id = { $in: ids };
+
+        const result = await Booking.updateMany(filter, {
+            $set: { deletedAt: null },
+        });
+
+        return res.json({
+            success: true,
+            restored: result.modifiedCount ?? result.nModified ?? 0,
+            message: "Bookings restored.",
+        });
+    } catch (error) {
+        console.error("restoreBookings error:", error);
+        return res
+            .status(500)
+            .json({ success: false, message: "Failed to restore bookings" });
+    }
+};
+
+/**
+ * DELETE /api/admin/bookings/purge
+ * Body: { ids?: string[] }  (omit to permanently empty the whole bin)
+ * Permanently removes soft-deleted bookings. This cannot be undone.
+ */
+export const purgeBin = async (req, res) => {
+    try {
+        const { ids } = req.body || {};
+        const filter = { deletedAt: { $ne: null } };
+        if (Array.isArray(ids) && ids.length) filter._id = { $in: ids };
+
+        const result = await Booking.deleteMany(filter);
+
+        return res.json({
+            success: true,
+            purged: result.deletedCount ?? 0,
+            message: "Bin emptied permanently.",
+        });
+    } catch (error) {
+        console.error("purgeBin error:", error);
+        return res
+            .status(500)
+            .json({ success: false, message: "Failed to purge bin" });
     }
 };
 /**

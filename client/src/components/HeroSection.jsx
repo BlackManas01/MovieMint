@@ -38,7 +38,7 @@ const HeroSection = () => {
           const today = new Date().toISOString().split("T")[0];
 
           const futureMovies = data.movies
-            .filter((m) => m.release_date >= today)
+            .filter((m) => m.release_date > today)
             .sort(
               (a, b) => new Date(a.release_date) - new Date(b.release_date)
             )
@@ -134,7 +134,7 @@ const HeroSection = () => {
           <p className="text-xs uppercase tracking-[0.3em] text-primary opacity-90">
             Upcoming
           </p>
-          <h1 className="text-4xl md:text-[56px] font-semibold">
+          <h1 className="text-shade text-4xl md:text-[56px] font-semibold">
             {movie.title}
           </h1>
 
@@ -166,7 +166,7 @@ const HeroSection = () => {
               navigate(`/upcoming/${movie.id}`);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="flex items-center gap-2 px-7 py-3 text-sm bg-teal-700 hover:bg-teal-600 transition rounded-full font-medium cursor-pointer"
+            className="flex items-center gap-2 px-7 py-3 text-sm bg-primary hover:bg-primary-dull text-black transition rounded-full font-medium cursor-pointer"
           >
             View Details
             <ArrowRight className="w-5 h-5" />
@@ -218,6 +218,9 @@ const HeroSection = () => {
               <React.Fragment key={i}>{renderSlide(m)}</React.Fragment>
             ))}
           </div>
+
+          {/* Bottom fade: subtle blend of the cinematic hero into the page background */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 z-[5] surface-fade-up" />
 
           {/* Left arrow */}
           <button

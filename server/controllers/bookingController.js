@@ -14,6 +14,37 @@ const VALID_SEAT_REGEX = /^[A-Z]\d{1,2}$/;
 
 const HOLD_MINUTES = Number(process.env.BOOKING_HOLD_MINUTES || 10); // default 10 minutes
 
+// ----- Zone pricing (mirrors the client seat layout) -----
+const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const sliceRows = (start, count) => ALPHA.slice(start, start + count);
+
+const sectionsForExperience = (experience, bp) => {
+    const exp = (experience || "").toLowerCase();
+    const laser = [
+        { rows: sliceRows(0, 2), price: bp + 0 },
+        { rows: sliceRows(2, 8), price: bp + 5 },
+        { rows: sliceRows(10, 2), price: bp + 10 },
+    ];
+    if (!exp) return laser;
+    if (exp.includes("imax") || exp.includes("dolby")) {
+        return [
+            { rows: sliceRows(0, 2), price: bp + 0 },
+            { rows: sliceRows(2, 6), price: bp + 5 },
+            { rows: sliceRows(8, 4), price: bp + 10 },
+        ];
+    }
+    if (exp.includes("insignia")) return [{ rows: sliceRows(0, 6), price: bp + 20 }];
+    if (exp.includes("4dx")) return [{ rows: sliceRows(0, 6), price: bp + 30 }];
+    return laser;
+};
+
+const priceForSeat = (experience, bp, seatId) => {
+    const row = String(seatId).match(/^[A-Za-z]+/)?.[0]?.toUpperCase();
+    const sections = sectionsForExperience(experience, bp);
+    for (const s of sections) if (s.rows.includes(row)) return s.price;
+    return bp;
+};
+
 // Helper: clean expired held seats on a show (server-side) and persist when changed
 const cleanupExpiredHeldSeats = async (showDoc) => {
     const now = Date.now();
@@ -47,7 +78,7 @@ const cleanupExpiredHeldSeats = async (showDoc) => {
 export const createBooking = async (req, res) => {
     try {
         const { userId } = req.auth();
-        const { showId, selectedSeats = [] } = req.body;
+        const { showId, selectedSeats = [], addonAmount = 0 } = req.body;
         const { origin } = req.headers;
         const clerkUser = await clerkClient.users.getUser(userId);
 
@@ -97,7 +128,15 @@ export const createBooking = async (req, res) => {
                 message: "Invalid show price. Cannot proceed to payment."
             });
         }
-        const amount = bp * selectedSeats.length;
+        // Per-seat zone pricing (matches the seat layout the user saw)
+        const seatsAmount = selectedSeats.reduce(
+            (acc, seat) => acc + priceForSeat(showData.experience, bp, seat),
+            0
+        );
+
+        // Optional snacks & beverages add-on (validated, capped)
+        const snacksAmount = Math.max(0, Math.min(1000, Number(addonAmount) || 0));
+        const totalAmount = seatsAmount + snacksAmount;
 
         // create booking (pending)
         const expiresAt = new Date(Date.now() + HOLD_MINUTES * 60 * 1000); // e.g., 10 minutes
@@ -111,7 +150,7 @@ export const createBooking = async (req, res) => {
             },
 
             show: showId,
-            amount,
+            amount: totalAmount,
             seats: selectedSeats,
             status: "pending",
             expiresAt,
@@ -139,11 +178,22 @@ export const createBooking = async (req, res) => {
                         price_data: {
                             currency: process.env.STRIPE_CURRENCY || "usd",
                             product_data: { name: showData.movie?.title || "Ticket" },
-                            unit_amount: Math.round(amount * 100),
+                            unit_amount: Math.round(seatsAmount * 100),
                         },
                         quantity: 1,
                     },
                 ];
+
+                if (snacksAmount > 0) {
+                    line_items.push({
+                        price_data: {
+                            currency: process.env.STRIPE_CURRENCY || "usd",
+                            product_data: { name: "Snacks & Beverages" },
+                            unit_amount: Math.round(snacksAmount * 100),
+                        },
+                        quantity: 1,
+                    });
+                }
 
                 const session = await stripe.checkout.sessions.create({
                     success_url: `${origin}/payment-success?bookingId=${booking._id}`,
@@ -185,6 +235,7 @@ export const createBooking = async (req, res) => {
         return res.json({
             success: true,
             bookingId: booking._id.toString(),
+            amount: totalAmount,
             expiresAt: expiresAt.toISOString(),
             paymentLink,
         });

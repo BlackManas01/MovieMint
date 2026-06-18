@@ -116,52 +116,59 @@ const MovieCard = ({ movie, isUpcoming = false, loading = false }) => {
 
   return (
     <div
-      className="flex flex-col justify-between p-3 bg-gray-800 rounded-2xl hover:-translate-y-1 transition duration-300 w-66 will-change-transform"
-      initial={{ opacity: 0, y: 15 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      viewport={{ once: true }}
+      className="group w-66 overflow-hidden rounded-2xl bg-white/[0.03] border border-white/10 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_24px_60px_-30px_rgba(168,85,247,0.7)] will-change-transform"
     >
       {/* Poster */}
-      <img
-        loading="lazy"
-        onClick={handleClick}
-        src={image_base_url + imagePath}
-        alt={movie.title}
-        className="rounded-lg h-52 w-full object-cover object-right-bottom cursor-pointer"
-      />
-
-      {/* Movie Name */}
-      <p className="font-semibold mt-2 truncate">{movie.title}</p>
-
-      {/* Release / runtime info */}
-      <p className="text-sm text-gray-400 mt-2">
-        {isUpcoming ? (
-          `Releasing on: ${movie.release_date}`
+      <div className="relative cursor-pointer overflow-hidden" onClick={handleClick}>
+        {imagePath ? (
+          <img
+            loading="lazy"
+            src={image_base_url + imagePath}
+            alt={movie.title}
+            className="h-72 w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
         ) : (
-          <>
-            {releaseYear}
-            {movie.genres?.length ? " • " : ""}
-            {movie.genres?.slice(0, 2).map((g) => g.name).join(" | ")}
-            {runtimeLabel ? ` • ${runtimeLabel}` : ""}
-          </>
+          <div className="h-72 w-full bg-white/5 flex items-center justify-center text-xs text-gray-500">No image</div>
         )}
-      </p>
+        {/* bottom scrim so the poster fades into the card body */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 surface-fade-up" />
+      </div>
 
-      {/* Button + Rating */}
-      <div className="flex items-center justify-between mt-4 pb-3">
-        <button
-          onClick={handleClick}
-          className={`px-4 py-2 text-xs rounded-full font-medium cursor-pointer transition ${isUpcoming ? "bg-teal-700 hover:bg-teal-600" : "bg-teal-800 hover:bg-teal-700"
-            }`}
-        >
-          {isUpcoming ? "View Details" : "Buy Tickets"}
-        </button>
+      {/* Body */}
+      <div className="p-3 pt-2.5">
+        {/* Movie Name */}
+        <p className="font-semibold truncate">{movie.title}</p>
 
-        <p className="flex items-center gap-1 text-sm text-gray-400 mt-1 pr-1">
-          <StarIcon className="w-4 h-4 text-primary fill-primary" />
-          {movie.vote_average?.toFixed ? movie.vote_average.toFixed(1) : movie.vote_average}
+        {/* Release / runtime info */}
+        <p className="text-sm text-gray-400 mt-1">
+          {isUpcoming ? (
+            `Releasing on: ${movie.release_date}`
+          ) : (
+            <>
+              {releaseYear}
+              {movie.genres?.length ? " • " : ""}
+              {movie.genres?.slice(0, 2).map((g) => g.name).join(" | ")}
+              {runtimeLabel ? ` • ${runtimeLabel}` : ""}
+            </>
+          )}
         </p>
+
+        {/* Button + Rating */}
+        <div className="flex items-center justify-between mt-3">
+          <button
+            onClick={handleClick}
+            className="px-4 py-2 text-xs rounded-full font-medium cursor-pointer transition text-black bg-primary hover:bg-primary-dull"
+          >
+            {isUpcoming ? "View Details" : "Buy Tickets"}
+          </button>
+
+          {!isUpcoming && (
+            <p className="flex items-center gap-1 text-sm text-gray-400 pr-1">
+              <StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" />
+              {movie.vote_average?.toFixed ? movie.vote_average.toFixed(1) : movie.vote_average}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

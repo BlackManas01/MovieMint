@@ -257,11 +257,11 @@ const ReviewYourBooking = () => {
         return (
             <div className="min-h-screen flex items-center justify-center p-6">
                 <div className="w-full max-w-xl text-center">
-                    <h2 className="text-2xl font-semibold mb-3">No booking data</h2>
+                    <h2 className="text-shade text-2xl font-semibold mb-3 mx-auto">No booking data</h2>
                     <p className="text-sm text-gray-400 mb-4">Open this page from the seat selection flow or use a bookingId link.</p>
                     <div className="flex justify-center gap-3">
                         <button onClick={() => navigate(-1)} className="px-4 py-2 rounded border border-white/10 hover:bg-white/5">Go back</button>
-                        <button onClick={() => navigate("/")} className="px-4 py-2 rounded bg-teal-600 text-white">Home</button>
+                        <button onClick={() => navigate("/")} className="px-4 py-2 rounded bg-primary text-black font-medium">Home</button>
                     </div>
                     <div className="mt-6 w-full bg-black/60 border border-white/10 p-4 rounded text-xs text-gray-300">
                         <div><strong>Debug</strong></div>
@@ -280,7 +280,7 @@ const ReviewYourBooking = () => {
     const amountValue = booking.amount ?? booking.total ?? null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 p-6 flex items-center">
+        <div className="min-h-screen bg-gradient-to-b from-black to-[#0b0910] p-6 flex items-center">
             {/* container centered vertically (so card appears in the middle of the viewport) */}
             <div className="w-full max-w-5xl mx-auto">
                 {/* Top small title bar (kept, but moved visually above the centered card) */}
@@ -294,13 +294,13 @@ const ReviewYourBooking = () => {
 
                     <div>
                         <div className="text-sm text-gray-300">Review</div>
-                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">Review Your Booking</h1>
+                        <h1 className="text-shade text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">Review Your Booking</h1>
                         <div className="text-sm text-gray-400 mt-1">Confirm details & complete payment</div>
                     </div>
                 </div>
 
                 {/* Movie / details card (stylish) */}
-                <div className="bg-gradient-to-r from-slate-900/80 via-indigo-900/80 to-rose-900/80 rounded-2xl p-6 shadow-2xl border border-white/6">
+                <div className="bg-gradient-to-br from-[#18121f] via-[#100b16] to-black rounded-2xl p-6 shadow-2xl border border-primary/15">
                     <div className="flex flex-col md:flex-row gap-6">
                         {/* Poster */}
                         <div className="w-full md:w-44 flex-shrink-0">
@@ -351,6 +351,39 @@ const ReviewYourBooking = () => {
                                         <div className="text-2xl md:text-3xl font-extrabold text-emerald-400 mt-1">{amountValue !== null ? `$ ${amountValue}` : "—"}</div>
                                     </div>
                                 </div>
+
+                                {/* Offers */}
+                                <div className="mt-5 flex flex-wrap items-center gap-2">
+                                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mr-1">Offers</span>
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-amber-500/10 border border-amber-500/25 text-amber-300">🎟️ MOVIE50 · 50% off up to $5</span>
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/5 border border-white/10 text-gray-300">💳 Pay with UPI · extra $1 off</span>
+                                </div>
+
+                                {/* Price details breakup */}
+                                {amountValue !== null && (() => {
+                                    const seatCount = (booking.seats || []).length || 1;
+                                    const total = Number(amountValue) || 0;
+                                    const snacks = Math.max(0, Number(booking.addonAmount) || 0);
+                                    const ticketsTotal = Math.max(0, total - snacks);
+                                    const conv = Math.round(ticketsTotal * 0.06 * 100) / 100;
+                                    const sub = Math.round((ticketsTotal - conv) * 100) / 100;
+                                    const Row = ({ label, val, bold }) => (
+                                        <div className={`flex items-center justify-between py-1 text-sm ${bold ? "font-semibold text-white" : "text-gray-300"}`}>
+                                            <span>{label}</span>
+                                            <span>$ {val.toFixed(2)}</span>
+                                        </div>
+                                    );
+                                    return (
+                                        <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] p-4 max-w-md">
+                                            <div className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Price details</div>
+                                            <Row label={`Ticket(s) (${seatCount} × $ ${(sub / seatCount).toFixed(2)})`} val={sub} />
+                                            {snacks > 0 && <Row label="Snacks & beverages" val={snacks} />}
+                                            <Row label="Convenience fee (incl. GST)" val={conv} />
+                                            <div className="my-2 border-t border-white/10" />
+                                            <Row label="Amount payable" val={total} bold />
+                                        </div>
+                                    );
+                                })()}
                             </div>
 
                             {/* bottom row inside card: timer + pay button */}
