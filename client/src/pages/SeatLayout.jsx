@@ -6,6 +6,7 @@ import isoTimeFormat from "../lib/isoTimeFormat";
 import { formatScreen } from "../lib/screenLabel";
 import BlurCircle from "../components/BlurCircle";
 import FoodAddon from "../components/FoodAddon";
+import HScroller from "../components/HScroller";
 import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 import { assets } from "../assets/assets";
@@ -663,11 +664,11 @@ const SeatLayout = () => {
           <button
             onClick={() => handleSeatClick(seatId)}
             aria-label={tooltipText}
-            className={`h-9 w-9 rounded-t-lg rounded-b-sm border text-[11px] flex items-center justify-center transition-transform
-              ${serverOcc ? "bg-white/6 text-gray-400 pointer-events-none cursor-not-allowed" : ""}
-              ${localHeld ? "bg-transparent pointer-events-none" : ""}
-              ${selected ? "bg-primary text-black border-primary scale-105 shadow-[0_0_18px_-4px_rgba(168,85,247,0.9)]" : ""}
-              ${!serverOcc && !localHeld && !selected ? "bg-black/40 text-gray-100 hover:scale-110 cursor-pointer border-white/10 hover:border-primary/50" : ""}
+            className={`relative h-9 w-9 rounded-t-[11px] rounded-b-md border text-[11px] font-medium flex items-center justify-center transition-all duration-200 will-change-transform
+              ${serverOcc ? "bg-white/[0.05] text-gray-500 border-white/5 pointer-events-none cursor-not-allowed" : ""}
+              ${localHeld ? "bg-transparent border-transparent pointer-events-none" : ""}
+              ${selected ? "bg-gradient-to-b from-primary to-primary-dull text-black border-primary -translate-y-0.5 scale-105 shadow-[0_8px_22px_-6px_rgba(168,85,247,0.95)]" : ""}
+              ${!serverOcc && !localHeld && !selected ? "bg-gradient-to-b from-white/10 to-white/[0.02] text-gray-200 border-white/10 cursor-pointer hover:-translate-y-0.5 hover:scale-110 hover:border-primary/60 hover:from-primary/25 hover:to-primary/5 hover:shadow-[0_8px_20px_-8px_rgba(168,85,247,0.85)]" : ""}
             `}
           >
             {serverOcc ? "X" : localHeld ? (
@@ -809,14 +810,16 @@ const SeatLayout = () => {
               // show first theater group that has upcoming times (keeps original behavior)
               const entries = Array.from(per.values());
               return (
-                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                <HScroller contentClassName="pb-1">
+                  <div className="flex gap-3 w-max px-1">
                   {entries.flat().sort((a, b) => new Date(a.time) - new Date(b.time)).map((slot) => (
                     <button key={slot.showId || slot._id || slot.time} onClick={() => setSelectedTimeSlot(slot)} className="shrink-0 flex flex-col items-start gap-0.5 px-4 py-2.5 rounded-xl border border-white/12 bg-white/5 hover:border-primary/50 hover:bg-primary/10 transition cursor-pointer">
                       <span className="text-sm font-semibold">{isoTimeFormat(slot.time)}</span>
                       <span className="text-[10px] text-gray-400">{formatScreen(slot.experience || slot.screenType, slot.format)} • {slot.language || "English"}</span>
                     </button>
                   ))}
-                </div>
+                  </div>
+                </HScroller>
               );
             } else {
               // When a theater is selected, show only that theater's future slots
@@ -833,7 +836,8 @@ const SeatLayout = () => {
               if (!arr.length) return <div className="p-4 text-sm text-gray-400">No upcoming timings for this theater on selected date.</div>;
 
               return (
-                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                <HScroller contentClassName="pb-1">
+                  <div className="flex gap-3 w-max px-1">
                   {arr.map((slot) => {
                     const active = String(slot.showId || slot._id) === String(selectedTimeSlot.showId || selectedTimeSlot._id);
                     return (
@@ -843,7 +847,8 @@ const SeatLayout = () => {
                     </button>
                     );
                   })}
-                </div>
+                  </div>
+                </HScroller>
               );
             }
           })()}

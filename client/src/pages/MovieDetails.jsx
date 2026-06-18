@@ -1,7 +1,7 @@
 // pages/MovieDetails.jsx - Full movie detail page with showtimes, trailers, cast, and date/theater selection
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Heart, PlayCircleIcon, StarIcon, X, Clapperboard, MapPin, Clock, ShieldCheck, ChevronRight, ArrowLeft } from "lucide-react";
+import { Heart, PlayCircleIcon, StarIcon, X, Clapperboard, MapPin, Clock, ShieldCheck, ArrowLeft } from "lucide-react";
 import BlurCircle from "../components/BlurCircle";
 import timeFormat from "../lib/timeFormat";
 import DateSelect from "../components/DateSelect";
@@ -9,6 +9,7 @@ import MovieCard from "../components/MovieCard";
 import MovieReviews from "../components/MovieReviews";
 import MovieDetailSkeleton from "../components/MovieDetailSkeleton";
 import AgeGate from "../components/AgeGate";
+import HScroller from "../components/HScroller";
 import { useAppContext } from "../context/AppContext";
 import { formatScreen, partOfDay, PARTS_OF_DAY, availabilityFromRatio, seatPressure, langFor } from "../lib/screenLabel";
 import { addRecent } from "../lib/recentlyViewed";
@@ -393,9 +394,8 @@ const MovieDetails = () => {
 
       {/* CAST */}
       <p className="text-xl font-semibold mt-20 tracking-tight bg-gradient-to-r from-white to-primary/70 bg-clip-text text-transparent w-max">Cast</p>
-      <div className="relative mt-8">
-        <div className="overflow-x-auto no-scrollbar pb-4">
-          <div className="flex items-center gap-6 w-max px-4 pr-16">
+      <HScroller className="mt-8" contentClassName="pb-4">
+        <div className="flex items-center gap-6 w-max px-4">
           {movie.casts.slice(0, 12).map((cast, index) => (
             <div key={index} className="group flex flex-col items-center text-center">
               <div className="relative">
@@ -413,17 +413,8 @@ const MovieDetails = () => {
               <p className="font-medium text-xs mt-3 text-gray-200">{cast.name}</p>
             </div>
           ))}
-          </div>
         </div>
-        {/* Scroll hint: right-edge fade + chevron */}
-        {movie.casts?.length > 6 && (
-          <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-20 fade-right-edge flex items-center justify-end">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 border border-white/15 text-gray-200 animate-pulse">
-              <ChevronRight className="w-5 h-5" />
-            </span>
-          </div>
-        )}
-      </div>
+      </HScroller>
 
       {/* DATE PICKER */}
       <DateSelect dateTime={show.dateTime} onDateChange={setSelectedDate} />

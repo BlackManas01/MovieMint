@@ -25,6 +25,23 @@
   background-image: linear-gradient(to left, rgb(var(--surface-rgb)), rgb(var(--surface-rgb) / 0));
 }
 
+/* Left-edge fade (mirror of the right edge) */
+.fade-left-edge {
+  background-image: linear-gradient(to right, rgb(var(--surface-rgb)), rgb(var(--surface-rgb) / 0));
+}
+
+/* Gentle horizontal nudge — the "in motion" cue for scroll arrows */
+@keyframes nudge-x {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+@keyframes nudge-x-rev {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-3px); }
+}
+.animate-nudge-x { animation: nudge-x 1.3s ease-in-out infinite; }
+.animate-nudge-x-rev { animation: nudge-x-rev 1.3s ease-in-out infinite; }
+
 /* Floating navbar chips: theme-aware glass backing for individual nav items */
 .nav-chip {
   background-color: rgb(var(--surface-rgb) / 0.82);
