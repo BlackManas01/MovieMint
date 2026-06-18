@@ -964,62 +964,70 @@ const SeatLayout = () => {
           </div>
         </div>
 
-        {/* Local Hold card (bigger width) */}
+        {/* Local Hold card (cooler) */}
         {tempHold && !cardHiddenLocal && selectedTimeSlot && (
-          <div className="fixed left-8 bottom-8 z-50">
-            <div className="group relative" style={{ width: 420 }}>
-              <div
-                className="bg-black/95 border border-white/10 rounded-lg p-4 shadow-lg"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-xs text-gray-400">Pending booking</div>
-                    <div className="font-medium">{showData?.movie?.title || "Movie"}</div>
-                    <div className="text-xs text-gray-300">{selectedTimeSlot.theaterName || selectedTimeSlot.theater?.name || ""} • {isoTimeFormat(selectedTimeSlot.time)}</div>
-                    <div className="text-sm text-orange-300 mt-2">Hold expires in {formatMs(Math.max(0, tempHold.expiresAt - Date.now()))}</div>
-                    <div className="text-xs text-gray-300 mt-1">Seats: <span className="font-medium">{(tempHold.seats || []).join(", ")}</span></div>
+          <div className="fixed left-4 sm:left-8 bottom-8 z-50 w-[min(92vw,380px)]">
+            <div className="group relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#1a130b]/95 via-black/90 to-black/95 backdrop-blur-xl shadow-[0_24px_70px_-25px_rgba(0,0,0,0.85)]">
+              {/* live countdown bar */}
+              <div className="h-1 w-full bg-white/5">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-primary transition-[width] duration-1000 ease-linear"
+                  style={{ width: `${Math.max(0, Math.min(100, ((holdTimeLeft ?? 0) / (10 * 60 * 1000)) * 100))}%` }}
+                />
+              </div>
+
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  {posterUrl && (
+                    <img src={posterUrl} alt={movie.title} className="h-20 w-14 rounded-lg object-cover ring-1 ring-primary/25 shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400/70" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+                      </span>
+                      <span className="text-[11px] uppercase tracking-wide text-amber-300 font-semibold">Pending booking</span>
+                    </div>
+                    <div className="font-bold truncate mt-0.5">{showData?.movie?.title || "Movie"}</div>
+                    <div className="text-xs text-gray-300 truncate">{theaterNameToShow} • {isoTimeFormat(selectedTimeSlot.time)}</div>
+                    <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                      {(tempHold.seats || []).map((s) => (
+                        <span key={s} className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-primary/15 text-primary border border-primary/30">{s}</span>
+                      ))}
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-amber-300 tabular-nums">
+                      Expires in {formatMs(holdTimeLeft ?? Math.max(0, new Date(tempHold.expiresAt).getTime() - Date.now()))}
+                    </div>
                   </div>
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  {tempHold?.paymentLink && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); window.location.href = tempHold.paymentLink; }}
+                      className="flex-1 px-4 py-2 rounded-xl bg-gradient-to-b from-primary to-primary-dull hover:brightness-110 text-black text-sm font-semibold cursor-pointer transition shadow-[0_10px_26px_-10px_rgba(168,85,247,0.9)]"
+                    >
+                      Pay Now
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); releaseTempHold(tempHold); }}
+                    className="px-4 py-2 rounded-xl border border-white/15 text-sm text-gray-200 hover:bg-white/5 cursor-pointer transition"
+                  >
+                    Release
+                  </button>
                 </div>
               </div>
 
-              {/* small circular X - hidden until card hover */}
+              {/* hide (X) */}
               <button
                 onClick={(e) => { e.stopPropagation(); hideCardLocally(); }}
-                className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 title="Hide"
                 aria-label="Hide hold card"
-                style={{ width: 34, height: 34, borderRadius: 999 }}
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white/6 flex items-center justify-center text-xs text-gray-300 hover:bg-white/12 hover:text-white transition cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-full bg-white/6 flex items-center justify-center text-xs text-white hover:bg-white/10">
-                  ✕
-                </div>
-              </button>
-            </div>
-
-            {/* actions below card */}
-            <div className="mt-2 flex gap-2">
-              {/* PAY NOW */}
-              {tempHold?.paymentLink && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.href = tempHold.paymentLink;
-                  }}
-                  className="px-4 py-1 rounded-md bg-primary hover:bg-primary-dull text-black text-sm font-semibold cursor-pointer"
-                >
-                  Pay Now
-                </button>
-              )}
-
-              {/* RELEASE */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  releaseTempHold(tempHold);
-                }}
-                className="px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm cursor-pointer"
-              >
-                Release
+                ✕
               </button>
             </div>
           </div>

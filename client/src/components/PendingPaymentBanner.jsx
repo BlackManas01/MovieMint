@@ -32,6 +32,7 @@ const PendingPaymentBanner = () => {
   const [dismissedId, setDismissedId] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const pollRef = useRef(null);
+  const boxRef = useRef(null);
 
   const remainingOf = (b) => {
     const base = b?.expiresAt
@@ -84,6 +85,16 @@ const PendingPaymentBanner = () => {
     return () => clearInterval(t);
   }, []);
 
+  // Collapse the expanded card when clicking anywhere outside it.
+  useEffect(() => {
+    if (!expanded) return;
+    const onDown = (e) => {
+      if (boxRef.current && !boxRef.current.contains(e.target)) setExpanded(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [expanded]);
+
   const liveRemaining = useMemo(() => (pending ? remainingOf(pending) : 0), [pending, now]);
 
   if (!user || !pending) return null;
@@ -109,9 +120,20 @@ const PendingPaymentBanner = () => {
     }
   };
 
+  // Jump to the seat layout for this pending booking.
+  const goToSeats = () => {
+    const mId = movie._id || pending.show?.movie?._id || pending.movieId;
+    const st = pending.show?.showDateTime || showTime;
+    const showId = pending.show?._id || pending.showId;
+    if (!mId || !st) { navigate("/my-bookings"); return; }
+    const iso = new Date(st).toISOString();
+    navigate(`/movies/${mId}/${iso.slice(0, 10)}?showId=${showId || ""}&time=${encodeURIComponent(iso)}`);
+  };
+
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-[min(94vw,560px)] px-2">
       <div
+        ref={boxRef}
         onClick={() => setExpanded((v) => !v)}
         role="button"
         tabIndex={0}
@@ -160,7 +182,7 @@ const PendingPaymentBanner = () => {
           </button>
 
           {/* expand chevron */}
-          <ChevronUp className={`hidden sm:block w-4 h-4 text-gray-400 shrink-0 transition-transform duration-300 ${expanded ? "rotate-0" : "rotate-180"}`} />
+          <ChevronUp className={`hidden sm:block w-4 h-4 text-gray-400 shrink-0 transition-transform duration-300 ${expanded ? "rotate-180" : "rotate-0"}`} />
 
           <button
             onClick={(e) => { e.stopPropagation(); setDismissedId(pending._id || pending.id); }}
@@ -213,9 +235,17 @@ const PendingPaymentBanner = () => {
                   >
                     Pay now · {CURRENCY} {amount}
                   </button>
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); goToSeats(); }}
+                    className="flex-1 px-4 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 cursor-pointer transition"
+                  >
+                    View seats
+                  </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); navigate("/my-bookings"); }}
-                    className="px-4 py-2 rounded-xl border border-white/15 text-sm text-gray-200 hover:bg-white/5 cursor-pointer transition"
+                    className="flex-1 px-4 py-2 rounded-xl border border-white/15 text-sm text-gray-200 hover:bg-white/5 cursor-pointer transition"
                   >
                     My Bookings
                   </button>
