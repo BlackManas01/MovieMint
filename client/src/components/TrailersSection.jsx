@@ -190,11 +190,11 @@ const TrailersSection = () => {
         <button
           onClick={handlePrev}
           className="absolute left-[-50px] top-1/2 -translate-y-1/2
-                     p-2.5 rounded-full bg-gray-800 hover:bg-gray-700 z-50 
+                     p-2.5 rounded-full bg-gray-800 hover:bg-primary hover:text-black z-50 
                      transition cursor-pointer disabled:opacity-30"
           disabled={trailers.length <= 1}
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-6 h-6 animate-nudge-x-rev" />
         </button>
 
         {/* Thumbnails */}
@@ -247,11 +247,11 @@ const TrailersSection = () => {
         <button
           onClick={handleNext}
           className="absolute right-[-50px] top-1/2 -translate-y-1/2
-                     p-2.5 rounded-full bg-gray-800 hover:bg-gray-700 z-50 
+                     p-2.5 rounded-full bg-gray-800 hover:bg-primary hover:text-black z-50 
                      transition cursor-pointer disabled:opacity-30"
           disabled={trailers.length <= 1}
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-6 h-6 animate-nudge-x" />
         </button>
       </div>
     </section>

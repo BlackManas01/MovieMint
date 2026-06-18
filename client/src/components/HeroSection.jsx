@@ -229,11 +229,11 @@ const HeroSection = () => {
             onMouseLeave={() => setIsPaused(false)}
             className="hidden md:flex items-center justify-center
                        w-10 h-10 rounded-full cursor-pointer
-                       bg-gray-800/70 hover:bg-gray-600
+                       bg-gray-800/70 hover:bg-primary hover:text-black
                        transition duration-200 
                        absolute left-6 top-1/2 -translate-y-1/2 text-white"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-6 h-6 animate-nudge-x-rev" />
           </button>
 
           {/* Right arrow */}
@@ -243,11 +243,11 @@ const HeroSection = () => {
             onMouseLeave={() => setIsPaused(false)}
             className="hidden md:flex items-center justify-center
                        w-10 h-10 rounded-full cursor-pointer
-                       bg-gray-800/70 hover:bg-gray-600
+                       bg-gray-800/70 hover:bg-primary hover:text-black
                        transition duration-200 
                        absolute right-6 top-1/2 -translate-y-1/2 text-white"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-6 h-6 animate-nudge-x" />
           </button>
         </>
       )}
