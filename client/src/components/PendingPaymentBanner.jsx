@@ -1,8 +1,9 @@
 // components/PendingPaymentBanner.jsx - Compact global banner shown on every page while a booking is unpaid
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ClockIcon, X } from "lucide-react";
+import { ClockIcon, X, ChevronUp, MapPin, TicketIcon } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
+import isoTimeFormat from "../lib/isoTimeFormat";
 
 const TEN_MIN = 10 * 60 * 1000;
 const CURRENCY = import.meta.env.VITE_CURRENCY || "$";
@@ -29,6 +30,7 @@ const PendingPaymentBanner = () => {
   const [pending, setPending] = useState(null);
   const [now, setNow] = useState(Date.now());
   const [dismissedId, setDismissedId] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const pollRef = useRef(null);
 
   const remainingOf = (b) => {
@@ -92,8 +94,12 @@ const PendingPaymentBanner = () => {
   const movie = pending.show?.movie || pending.movie || {};
   const title = movie.title || pending.movieTitle || "your booking";
   const poster = movie.poster_path ? image_base_url + movie.poster_path : null;
-  const seats = (pending.bookedSeats || pending.seats || []).join(", ");
+  const seatsArr = pending.bookedSeats || pending.seats || [];
+  const seats = seatsArr.join(", ");
   const amount = pending.amount ?? pending.totalAmount;
+  const theater = pending.show?.theaterName || pending.theaterName || "";
+  const showTime = pending.show?.showTime || pending.showTime || pending.time || null;
+  const progressPct = Math.max(0, Math.min(100, (liveRemaining / TEN_MIN) * 100));
 
   const payNow = () => {
     if (pending.paymentLink) {
@@ -105,45 +111,119 @@ const PendingPaymentBanner = () => {
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-[min(94vw,560px)] px-2">
-      <div className="flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-black/80 backdrop-blur-xl px-3 py-2.5 shadow-[0_20px_60px_-25px_rgba(0,0,0,0.7)]">
-        {/* pulsing status dot */}
-        <span className="relative flex h-2.5 w-2.5 shrink-0">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400/70" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400" />
-        </span>
-
-        {poster && (
-          <img src={poster} alt={title} className="hidden sm:block h-10 w-7 rounded-md object-cover ring-1 ring-white/15" />
-        )}
-
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-wide text-amber-300 font-semibold leading-none">Payment pending</p>
-          <p className="text-sm font-medium truncate">
-            {title}
-            {seats && <span className="text-gray-400 font-normal"> · {seats}</span>}
-            {amount != null && <span className="text-gray-400 font-normal"> · {CURRENCY} {amount}</span>}
-          </p>
+      <div
+        onClick={() => setExpanded((v) => !v)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v); }}
+        className="group cursor-pointer overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#1a130b]/90 via-black/85 to-black/90 backdrop-blur-xl shadow-[0_24px_70px_-25px_rgba(0,0,0,0.85)] transition-all duration-300 hover:border-amber-400/55"
+      >
+        {/* live countdown progress bar */}
+        <div className="h-1 w-full bg-white/5">
+          <div
+            className="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-primary transition-[width] duration-1000 ease-linear"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
 
-        <div className="hidden sm:flex items-center gap-1 text-amber-300 text-sm font-semibold tabular-nums">
-          <ClockIcon className="w-4 h-4" />
-          {fmt(liveRemaining)}
+        {/* COMPACT ROW (always visible) */}
+        <div className="flex items-center gap-3 px-3 py-2.5">
+          {/* pulsing status dot */}
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400/70" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400" />
+          </span>
+
+          {poster && (
+            <img src={poster} alt={title} className="hidden sm:block h-10 w-7 rounded-md object-cover ring-1 ring-white/15" />
+          )}
+
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-wide text-amber-300 font-semibold leading-none">Payment pending</p>
+            <p className="text-sm font-medium truncate">
+              {title}
+              {seats && <span className="text-gray-400 font-normal"> · {seats}</span>}
+              {amount != null && <span className="text-gray-400 font-normal"> · {CURRENCY} {amount}</span>}
+            </p>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1 text-amber-300 text-sm font-semibold tabular-nums">
+            <ClockIcon className="w-4 h-4" />
+            {fmt(liveRemaining)}
+          </div>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); payNow(); }}
+            className="shrink-0 px-4 py-1.5 rounded-full bg-gradient-to-b from-primary to-primary-dull hover:brightness-110 text-black text-sm font-semibold cursor-pointer transition shadow-[0_8px_20px_-8px_rgba(168,85,247,0.9)]"
+          >
+            Pay now
+          </button>
+
+          {/* expand chevron */}
+          <ChevronUp className={`hidden sm:block w-4 h-4 text-gray-400 shrink-0 transition-transform duration-300 ${expanded ? "rotate-0" : "rotate-180"}`} />
+
+          <button
+            onClick={(e) => { e.stopPropagation(); setDismissedId(pending._id || pending.id); }}
+            aria-label="Dismiss"
+            className="shrink-0 p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <button
-          onClick={payNow}
-          className="shrink-0 px-4 py-1.5 rounded-full bg-primary hover:bg-primary-dull text-black text-sm font-semibold cursor-pointer transition"
-        >
-          Pay now
-        </button>
+        {/* EXPANDED DETAILS (smooth height) */}
+        <div className={`grid transition-all duration-300 ease-out ${expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+          <div className="overflow-hidden">
+            <div className="px-3 pb-3 pt-3 border-t border-white/10 flex gap-4">
+              {poster && (
+                <img src={poster} alt={title} className="h-28 w-20 rounded-lg object-cover ring-1 ring-primary/25 shadow-lg shrink-0" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold truncate">{title}</p>
+                {theater && (
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-300 truncate">
+                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0" /> {theater}
+                    {showTime && <span className="text-gray-500">· {isoTimeFormat(showTime)}</span>}
+                  </p>
+                )}
 
-        <button
-          onClick={() => setDismissedId(pending._id || pending.id)}
-          aria-label="Dismiss"
-          className="shrink-0 p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
-        >
-          <X className="w-4 h-4" />
-        </button>
+                {/* seat chips */}
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <TicketIcon className="w-4 h-4 text-gray-400" />
+                  {seatsArr.length ? seatsArr.map((s) => (
+                    <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/15 text-primary border border-primary/30">{s}</span>
+                  )) : <span className="text-xs text-gray-400">No seats</span>}
+                </div>
+
+                <div className="mt-3 flex items-end justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wide text-gray-400">Amount</div>
+                    <div className="text-2xl font-extrabold bg-gradient-to-r from-primary via-fuchsia-300 to-primary bg-clip-text text-transparent">{amount != null ? `${CURRENCY} ${amount}` : "—"}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] uppercase tracking-wide text-gray-400">Expires in</div>
+                    <div className="text-xl font-semibold text-amber-300 tabular-nums">{fmt(liveRemaining)}</div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); payNow(); }}
+                    className="flex-1 px-4 py-2 rounded-xl bg-gradient-to-b from-primary to-primary-dull hover:brightness-110 text-black text-sm font-semibold cursor-pointer transition shadow-[0_10px_26px_-10px_rgba(168,85,247,0.9)]"
+                  >
+                    Pay now · {CURRENCY} {amount}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate("/my-bookings"); }}
+                    className="px-4 py-2 rounded-xl border border-white/15 text-sm text-gray-200 hover:bg-white/5 cursor-pointer transition"
+                  >
+                    My Bookings
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
