@@ -161,6 +161,8 @@ const Dashboard = () => {
             title: "Total Bookings",
             value: dashboardData.totalBookings || "0",
             icon: ChartLineIcon,
+            bar: "from-violet-400 to-purple-500",
+            iconCls: "border-violet-400/30 bg-violet-400/10 text-violet-300",
         },
         {
             title: "Total Revenue",
@@ -170,16 +172,22 @@ const Dashboard = () => {
                     dashboardData.totalRevenue ??
                     "0") || "0",
             icon: CircleDollarSignIcon,
+            bar: "from-amber-400 to-orange-500",
+            iconCls: "border-amber-400/30 bg-amber-400/10 text-amber-300",
         },
         {
             title: "Movies Playing Today",
             value: activeShowsByMovie.length || "0",
             icon: PlayCircleIcon,
+            bar: "from-fuchsia-400 to-pink-500",
+            iconCls: "border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-300",
         },
         {
             title: "Total Users",
             value: dashboardData.totalUser || "0",
             icon: UsersIcon,
+            bar: "from-sky-400 to-cyan-500",
+            iconCls: "border-sky-400/30 bg-sky-400/10 text-sky-300",
         },
     ];
 
@@ -264,19 +272,23 @@ const Dashboard = () => {
     return (
         <div className="w-full">
             <Title text1="Admin" text2="Dashboard" />
+            <p className="mt-1 text-sm text-gray-400">
+                {`Welcome back${user?.firstName ? `, ${user.firstName}` : ""} · `}
+                <span className="text-gray-300">{new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</span>
+            </p>
 
             {/* Stats cards */}
             <div className="relative grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mt-8">
                 <BlurCircle top="-100px" left="0" />
                 {dashboardCards.map((card, index) => (
-                    <div key={index} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-5 backdrop-blur-sm transition-all duration-300 hover:border-violet-400/40 hover:shadow-[0_20px_60px_-30px_rgba(167,139,250,0.8)]">
-                        <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-violet-400/10 blur-2xl" />
+                    <div key={index} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-5 pt-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/25 hover:shadow-[0_24px_60px_-30px_rgba(167,139,250,0.7)]">
+                        <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${card.bar}`} />
                         <div className="relative flex items-start justify-between">
                             <div>
                                 <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400">{card.title}</p>
-                                <p className="text-3xl font-semibold mt-2 tracking-tight">{card.value}</p>
+                                <p className="text-3xl font-bold mt-2 tracking-tight">{card.value}</p>
                             </div>
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-400/30 bg-violet-400/10 text-violet-300 shadow-[0_0_25px_-8px_rgba(167,139,250,0.8)]">
+                            <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${card.iconCls} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
                                 <card.icon className="w-5 h-5" />
                             </div>
                         </div>
@@ -345,6 +357,9 @@ const Dashboard = () => {
                                     <div className="relative">
                                         <img src={image_base_url + poster} alt={movie.title || "Movie"} className="h-60 w-full object-cover" />
                                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 surface-fade-up" />
+                                        <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/70 border border-violet-400/40 text-violet-200 backdrop-blur">
+                                            {group.shows.length} show{group.shows.length > 1 ? "s" : ""}
+                                        </span>
                                     </div>
                                 )}
 
