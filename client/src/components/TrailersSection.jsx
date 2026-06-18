@@ -20,6 +20,7 @@ const TrailersSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const currentTrailer =
     trailers.length > 0 ? trailers[currentIndex % trailers.length] : null;
@@ -45,6 +46,11 @@ const TrailersSection = () => {
   useEffect(() => {
     fetchTrailers();
   }, [fetchTrailers, attempt]);
+
+  // Reset to the thumbnail (stop playback) whenever the selected trailer changes.
+  useEffect(() => {
+    setIsPlaying(false);
+  }, [currentIndex]);
 
   const handleNext = useCallback(() => {
     if (!trailers.length) return;
@@ -103,33 +109,43 @@ const TrailersSection = () => {
         ) : currentTrailer ? (
           <>
             <div className="relative mx-auto max-w-full w-[960px] h-[540px] rounded-xl overflow-hidden bg-black">
-              <a
-                href={`https://www.youtube.com/watch?v=${getYouTubeId(currentTrailer.videoUrl)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group absolute inset-0 h-full w-full cursor-pointer"
-                aria-label={`Play trailer on YouTube: ${currentTrailer.title}`}
-              >
-                <img
-                  src={`https://img.youtube.com/vi/${getYouTubeId(currentTrailer.videoUrl)}/maxresdefault.jpg`}
-                  onError={(e) => {
-                    e.currentTarget.src = `https://img.youtube.com/vi/${getYouTubeId(currentTrailer.videoUrl)}/hqdefault.jpg`;
-                  }}
-                  alt={currentTrailer.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              {isPlaying ? (
+                <iframe
+                  className="absolute inset-0 h-full w-full"
+                  src={`https://www.youtube-nocookie.com/embed/${getYouTubeId(currentTrailer.videoUrl)}?autoplay=1&rel=0`}
+                  title={currentTrailer.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30 transition group-hover:from-black/60" />
-                {/* Play button */}
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-black shadow-[0_10px_40px_-8px_rgba(0,0,0,0.7)] transition-transform duration-300 group-hover:scale-110">
-                    <PlayCircleIcon className="h-9 w-9" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsPlaying(true)}
+                  className="group absolute inset-0 h-full w-full cursor-pointer"
+                  aria-label={`Play trailer: ${currentTrailer.title}`}
+                >
+                  <img
+                    src={`https://img.youtube.com/vi/${getYouTubeId(currentTrailer.videoUrl)}/maxresdefault.jpg`}
+                    onError={(e) => {
+                      e.currentTarget.src = `https://img.youtube.com/vi/${getYouTubeId(currentTrailer.videoUrl)}/hqdefault.jpg`;
+                    }}
+                    alt={currentTrailer.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30 transition group-hover:from-black/60" />
+                  {/* Play button */}
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-black shadow-[0_10px_40px_-8px_rgba(0,0,0,0.7)] transition-transform duration-300 group-hover:scale-110">
+                      <PlayCircleIcon className="h-9 w-9" />
+                    </span>
                   </span>
-                </span>
-                {/* Title chip bottom-left */}
-                <span className="absolute left-4 bottom-4 right-4 text-left text-white text-sm md:text-base font-semibold truncate drop-shadow">
-                  {currentTrailer.title}
-                </span>
-              </a>
+                  {/* Title chip bottom-left */}
+                  <span className="absolute left-4 bottom-4 right-4 text-left text-white text-sm md:text-base font-semibold truncate drop-shadow">
+                    {currentTrailer.title}
+                  </span>
+                </button>
+              )}
             </div>
             <div className="max-w-[960px] mx-auto mt-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm md:text-base text-gray-200 font-medium truncate">
