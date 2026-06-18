@@ -843,9 +843,9 @@ const ShowDetails = () => {
                 </div>
             )}
 
-            {/* Right drawer (resizable, stuck to right edge) */}
+            {/* Centered modal (cinematic) */}
             <div
-                className="fixed inset-0 z-50 flex justify-end"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
                 style={{ pointerEvents: isDrawerOpen ? "auto" : "none" }}
             >
                 {/* Backdrop */}
@@ -856,56 +856,42 @@ const ShowDetails = () => {
                     />
                 )}
 
-                {/* Drawer panel */}
+                {/* Centered modal panel */}
                 <div
                     className={`
-            relative h-full bg-black/80 backdrop-blur-xl border-l border-white/10 shadow-2xl 
-            flex flex-col
-            transform transition-transform duration-300 ease-out
-            ${isDrawerOpen ? "translate-x-0" : "translate-x-full"}
+            relative w-full max-w-3xl max-h-[90vh] rounded-3xl overflow-hidden
+            bg-gradient-to-br from-[#15101c] to-black border border-primary/25
+            shadow-[0_40px_120px_-30px_rgba(168,85,247,0.6)]
+            flex flex-col origin-center
+            transition-all duration-300 ease-out
+            ${isDrawerOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4 pointer-events-none"}
           `}
-                    style={{
-                        width: `${drawerWidth}px`,
-                        minWidth: `${MIN_DRAWER_WIDTH}px`,
-                        maxWidth: `${MAX_DRAWER_WIDTH}px`,
-                    }}
                 >
-                    {/* Resize handle (left edge) */}
-                    <div
-                        onMouseDown={handleResizeMouseDown}
-                        className="
-              absolute top-0 left-0 h-full w-1 
-              cursor-ew-resize z-20
-              bg-transparent hover:bg-white/10
-            "
-                        title="Drag to resize"
-                    />
-
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-                        <div className="flex items-center gap-3">
+                    {/* Cinematic header with backdrop */}
+                    <div className="relative h-32 shrink-0">
+                        {selectedMovie?.backdrop_path && (
+                            <img src={image_base_url + selectedMovie.backdrop_path} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0810] via-[#0c0810]/80 to-black/40" />
+                        <button
+                            onClick={closeDrawer}
+                            className="absolute top-3 right-3 z-10 h-9 w-9 flex items-center justify-center rounded-full bg-black/60 border border-white/15 text-gray-200 hover:bg-primary hover:text-black transition cursor-pointer"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end gap-3">
                             {selectedMovie && (
                                 <img
                                     src={image_base_url + selectedMovie.poster_path}
                                     alt={selectedMovie.title}
-                                    className="w-10 h-14 object-cover rounded-md"
+                                    className="w-12 h-16 object-cover rounded-lg ring-1 ring-white/20 shadow-xl"
                                 />
                             )}
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase tracking-[0.24em]">
-                                    Manage Shows
-                                </p>
-                                <h2 className="text-base font-semibold">
-                                    {selectedMovie?.title || "No movie selected"}
-                                </h2>
+                            <div className="min-w-0">
+                                <p className="text-[10px] text-violet-300 uppercase tracking-[0.24em] font-semibold">Manage Shows</p>
+                                <h2 className="text-xl font-bold truncate">{selectedMovie?.title || "No movie selected"}</h2>
                             </div>
                         </div>
-                        <button
-                            onClick={closeDrawer}
-                            className="p-1 rounded-full hover:bg-white/10 cursor-pointer transition"
-                        >
-                            <X className="w-5 h-5 text-gray-300" />
-                        </button>
                     </div>
 
                     {/* Body */}
