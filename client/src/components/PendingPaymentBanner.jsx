@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ClockIcon, X, ChevronUp, MapPin, TicketIcon } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import isoTimeFormat from "../lib/isoTimeFormat";
+import toast from "react-hot-toast";
 
 const TEN_MIN = 10 * 60 * 1000;
 const CURRENCY = import.meta.env.VITE_CURRENCY || "$";
@@ -29,7 +30,6 @@ const PendingPaymentBanner = () => {
 
   const [pending, setPending] = useState(null);
   const [now, setNow] = useState(Date.now());
-  const [dismissedId, setDismissedId] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const pollRef = useRef(null);
   const boxRef = useRef(null);
@@ -100,7 +100,6 @@ const PendingPaymentBanner = () => {
   if (!user || !pending) return null;
   if (isHiddenRoute(location.pathname)) return null;
   if (liveRemaining <= 0) return null;
-  if (dismissedId === (pending._id || pending.id)) return null;
 
   const movie = pending.show?.movie || pending.movie || {};
   const title = movie.title || pending.movieTitle || "your booking";
@@ -128,6 +127,40 @@ const PendingPaymentBanner = () => {
     if (!mId || !st) { navigate("/my-bookings"); return; }
     const iso = new Date(st).toISOString();
     navigate(`/movies/${mId}/${iso.slice(0, 10)}?showId=${showId || ""}&time=${encodeURIComponent(iso)}`);
+  };
+
+  // Release (cancel) the unpaid hold — frees the seats and removes it from My Bookings.
+  const releaseBooking = async (e) => {
+    e?.stopPropagation();
+    const bid = pending._id || pending.id;
+    try {
+      if (bid) {
+        await axios.post(
+          "/api/booking/release",
+          { bookingId: bid },
+          { headers: { Authorization: `Bearer ${await getToken()}` } }
+        );
+      }
+      toast.success("Seats released");
+    } catch {
+      toast.error("Could not release seats");
+    } finally {
+      // Clear any local seat-page hold + notify the rest of the app.
+      try {
+        const mId = movie._id || pending.show?.movie?._id || pending.movieId;
+        const st = pending.show?.showDateTime || showTime;
+        const showId = pending.show?._id || pending.showId;
+        if (mId && st && showId) {
+          const d = new Date(st).toISOString().slice(0, 10);
+          localStorage.removeItem(`tempHold:${mId}:${d}:${showId}`);
+          window.dispatchEvent(new CustomEvent("TEMP_HOLD_RELEASED", { detail: { showId } }));
+        }
+      } catch { /* ignore */ }
+      window.dispatchEvent(new Event("BOOKING_RELEASED"));
+      setExpanded(false);
+      setPending(null);
+      refresh();
+    }
   };
 
   return (
@@ -185,9 +218,10 @@ const PendingPaymentBanner = () => {
           <ChevronUp className={`hidden sm:block w-4 h-4 text-gray-400 shrink-0 transition-transform duration-300 ${expanded ? "rotate-180" : "rotate-0"}`} />
 
           <button
-            onClick={(e) => { e.stopPropagation(); setDismissedId(pending._id || pending.id); }}
-            aria-label="Dismiss"
-            className="shrink-0 p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            onClick={releaseBooking}
+            aria-label="Release seats"
+            title="Release seats"
+            className="shrink-0 p-1 rounded-full text-gray-400 hover:text-red-300 hover:bg-red-500/15 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
