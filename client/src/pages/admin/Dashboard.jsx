@@ -58,6 +58,12 @@ const Dashboard = () => {
 
     // Popup: today's shows for a single movie
     const [selectedMovieGroup, setSelectedMovieGroup] = useState(null);
+    const [expFilter, setExpFilter] = useState("all");
+
+    // Reset the experience filter whenever a different movie is opened.
+    useEffect(() => {
+        setExpFilter("all");
+    }, [selectedMovieGroup]);
 
     // Fetch dashboard
     const fetchDashboardData = async () => {
@@ -450,6 +456,12 @@ const Dashboard = () => {
                     if (e.includes("insignia")) return "border-violet-400/40 bg-violet-400/10 text-violet-300";
                     return "border-white/20 bg-white/5 text-gray-300";
                 };
+                // Available experiences + filtered theaters
+                const allExps = Array.from(new Set(selectedMovieGroup.shows.map((s) => s.experience || "Standard"))).sort();
+                const matchExp = (s) => expFilter === "all" || (s.experience || "Standard") === expFilter;
+                const visibleTheaters = selectedMovieTheaters
+                    .map((t) => ({ ...t, shows: t.shows.filter(matchExp) }))
+                    .filter((t) => t.shows.length);
                 return (
                     <div onClick={closeMovieModal} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
                         <div onClick={(e) => e.stopPropagation()} className="animate-pop-in w-full max-w-4xl max-h-[88vh] overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-[#15101c] to-black shadow-[0_40px_120px_-30px_rgba(168,85,247,0.6)] flex flex-col">
@@ -489,12 +501,22 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
+                            {/* Experience filter */}
+                            {allExps.length > 1 && (
+                                <div className="shrink-0 px-5 pt-4 flex flex-wrap gap-2">
+                                    <button onClick={() => setExpFilter("all")} className={`text-xs px-3 py-1 rounded-full border transition cursor-pointer ${expFilter === "all" ? "bg-primary text-black border-primary font-semibold" : "border-white/15 bg-white/5 text-gray-300 hover:border-primary/40"}`}>All</button>
+                                    {allExps.map((e) => (
+                                        <button key={e} onClick={() => setExpFilter(e)} className={`text-xs px-3 py-1 rounded-full border transition cursor-pointer ${expFilter === e ? "bg-primary text-black border-primary font-semibold" : `${expAccent(e)} hover:brightness-125`}`}>{e}</button>
+                                    ))}
+                                </div>
+                            )}
+
                             {/* Theaters + showtimes */}
                             <div className="overflow-y-auto p-5 space-y-4">
-                                {selectedMovieTheaters.length === 0 ? (
-                                    <p className="text-sm text-gray-400">No showtimes for this movie today.</p>
+                                {visibleTheaters.length === 0 ? (
+                                    <p className="text-sm text-gray-400">No showtimes for this filter.</p>
                                 ) : (
-                                    selectedMovieTheaters.map((theater) => {
+                                    visibleTheaters.map((theater) => {
                                         const label = theater.theaterAddress && theater.theaterCity
                                             ? `${theater.theaterAddress}, ${theater.theaterCity}`
                                             : theater.theaterCity || theater.theaterAddress || "";
