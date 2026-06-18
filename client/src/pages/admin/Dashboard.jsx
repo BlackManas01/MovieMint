@@ -65,6 +65,14 @@ const Dashboard = () => {
         setExpFilter("all");
     }, [selectedMovieGroup]);
 
+    // Lock background page scroll while the modal is open.
+    useEffect(() => {
+        if (!selectedMovieGroup) return;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = prev; };
+    }, [selectedMovieGroup]);
+
     // Fetch dashboard
     const fetchDashboardData = async () => {
         try {
@@ -489,7 +497,7 @@ const Dashboard = () => {
                             )}
 
                             {/* Theaters + showtimes */}
-                            <div className="overflow-y-auto p-5 space-y-4">
+                            <div className="overflow-y-auto overscroll-contain p-5 space-y-4">
                                 {visibleTheaters.length === 0 ? (
                                     <p className="text-sm text-gray-400">No showtimes for this filter.</p>
                                 ) : (

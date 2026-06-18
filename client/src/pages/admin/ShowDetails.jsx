@@ -390,6 +390,14 @@ const ShowDetails = () => {
         setIsAddShowOpen(false);
     };
 
+    // Lock background page scroll while the modal is open.
+    useEffect(() => {
+        if (!isDrawerOpen) return;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = prev; };
+    }, [isDrawerOpen]);
+
     /* ---------------------------------------------------------------------------
      * Movie-level hide / unhide
      * ------------------------------------------------------------------------ */
@@ -896,7 +904,7 @@ const ShowDetails = () => {
 
                     {/* Body */}
                     {selectedMovie ? (
-                        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+                        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 space-y-6">
                             {/* Release info + movie visibility button */}
                             <div className="flex flex-col gap-3 text-xs text-gray-400">
                                 <div className="space-y-1">

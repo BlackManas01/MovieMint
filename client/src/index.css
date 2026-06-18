@@ -81,6 +81,7 @@ body {
 
 .no-scrollbar {
   scrollbar-width: none;
+  overscroll-behavior: contain;
 }
 
 /* Accessibility: visible keyboard focus ring */
