@@ -42,6 +42,13 @@
 .animate-nudge-x { animation: nudge-x 1.3s ease-in-out infinite; }
 .animate-nudge-x-rev { animation: nudge-x-rev 1.3s ease-in-out infinite; }
 
+/* Modal entrance pop */
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.animate-pop-in { animation: pop-in 0.22s ease-out; }
+
 /* Hover-activated nudge: the icon only moves while its (enabled) button is hovered.
    Disabled buttons don't receive :hover, so they stay still until enabled. */
 .arrow-hover-r:hover .arrow-ico { animation: nudge-x 1.1s ease-in-out infinite; }

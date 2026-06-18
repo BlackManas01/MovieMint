@@ -5,6 +5,8 @@ import {
     PlayCircleIcon,
     StarIcon,
     UsersIcon,
+    MapPin,
+    CalendarDays,
     X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
@@ -431,53 +433,102 @@ const Dashboard = () => {
             </div>
 
             {/* Modal: today's showtimes for selected movie */}
-            {selectedMovieGroup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-3xl bg-gradient-to-br from-[#1b1426] via-[#100b16] to-black border border-primary/20 rounded-2xl p-5 relative shadow-[0_30px_80px_-30px_rgba(168,85,247,0.5)]">
-                        <button onClick={closeMovieModal} className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 cursor-pointer">
-                            <X className="w-5 h-5 text-gray-300" />
-                        </button>
+            {selectedMovieGroup && (() => {
+                const m = selectedMovieGroup.movie;
+                const backdrop = m.backdrop_path
+                    ? image_base_url + m.backdrop_path
+                    : (m.poster_path ? image_base_url + m.poster_path : null);
+                const totalShows = selectedMovieGroup.shows.length;
+                const totalTheaters = selectedMovieTheaters.length;
+                const rating = m.vote_average;
+                const rt = runtimeCache[selectedMovieGroup.movieId] || m.runtime;
+                const expAccent = (exp = "") => {
+                    const e = (exp || "").toLowerCase();
+                    if (e.includes("imax")) return "border-sky-400/40 bg-sky-400/10 text-sky-300";
+                    if (e.includes("4dx")) return "border-fuchsia-400/40 bg-fuchsia-400/10 text-fuchsia-300";
+                    if (e.includes("dolby")) return "border-amber-400/40 bg-amber-400/10 text-amber-300";
+                    if (e.includes("insignia")) return "border-violet-400/40 bg-violet-400/10 text-violet-300";
+                    return "border-white/20 bg-white/5 text-gray-300";
+                };
+                return (
+                    <div onClick={closeMovieModal} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+                        <div onClick={(e) => e.stopPropagation()} className="animate-pop-in w-full max-w-4xl max-h-[88vh] overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-[#15101c] to-black shadow-[0_40px_120px_-30px_rgba(168,85,247,0.6)] flex flex-col">
+                            {/* Hero header with backdrop */}
+                            <div className="relative h-44 sm:h-52 shrink-0">
+                                {backdrop && <img src={backdrop} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0c0810] via-[#0c0810]/75 to-black/30" />
+                                <button onClick={closeMovieModal} className="absolute top-3 right-3 z-10 h-9 w-9 flex items-center justify-center rounded-full bg-black/60 border border-white/15 text-gray-200 hover:bg-primary hover:text-black transition cursor-pointer">
+                                    <X className="w-5 h-5" />
+                                </button>
+                                <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end gap-4">
+                                    {m.poster_path && (
+                                        <img src={image_base_url + m.poster_path} alt={m.title} className="hidden sm:block w-20 h-28 rounded-xl object-cover ring-1 ring-white/20 shadow-2xl -mb-1" />
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                        <h2 className="text-2xl font-bold truncate">{m.title}</h2>
+                                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-300">
+                                            {rating ? (
+                                                <span className="inline-flex items-center gap-1"><StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" />{rating.toFixed(1)}</span>
+                                            ) : null}
+                                            {rt ? <span>{timeFormat(rt)}</span> : null}
+                                            <span className="inline-flex items-center gap-1 text-violet-300"><CalendarDays className="w-4 h-4" /> Today</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div className="flex gap-4 mb-4">
-                            {selectedMovieGroup.movie.poster_path && (
-                                <img src={image_base_url + selectedMovieGroup.movie.poster_path} alt={selectedMovieGroup.movie.title} className="w-20 h-28 object-cover rounded-md" />
-                            )}
-                            <div>
-                                <h2 className="text-lg font-semibold">{selectedMovieGroup.movie.title}</h2>
-                                <p className="text-xs text-gray-400 mt-1">Today's showtimes by theater</p>
+                            {/* Summary strip */}
+                            <div className="grid grid-cols-2 gap-px bg-white/10 shrink-0">
+                                <div className="bg-[#0c0810] px-5 py-3">
+                                    <div className="text-[11px] uppercase tracking-wide text-gray-400">Shows today</div>
+                                    <div className="text-lg font-bold text-violet-200">{totalShows}</div>
+                                </div>
+                                <div className="bg-[#0c0810] px-5 py-3">
+                                    <div className="text-[11px] uppercase tracking-wide text-gray-400">Theaters</div>
+                                    <div className="text-lg font-bold text-fuchsia-200">{totalTheaters}</div>
+                                </div>
+                            </div>
+
+                            {/* Theaters + showtimes */}
+                            <div className="overflow-y-auto p-5 space-y-4">
+                                {selectedMovieTheaters.length === 0 ? (
+                                    <p className="text-sm text-gray-400">No showtimes for this movie today.</p>
+                                ) : (
+                                    selectedMovieTheaters.map((theater) => {
+                                        const label = theater.theaterAddress && theater.theaterCity
+                                            ? `${theater.theaterAddress}, ${theater.theaterCity}`
+                                            : theater.theaterCity || theater.theaterAddress || "";
+                                        return (
+                                            <div key={theater.theaterId} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-white flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary shrink-0" />{theater.theaterName}</p>
+                                                        {label && <p className="text-[11px] text-gray-400 mt-0.5 pl-[22px]">{label}</p>}
+                                                    </div>
+                                                    <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-300">{theater.shows.length} show{theater.shows.length > 1 ? "s" : ""}</span>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-2 mt-3">
+                                                    {theater.shows.map((show) => (
+                                                        <div key={show._id} className="min-w-[96px] px-3 py-2 rounded-xl border border-white/10 bg-black/40 hover:border-primary/40 hover:bg-primary/5 transition cursor-default">
+                                                            <div className="text-sm font-bold text-gray-100">{formatTime(show.showDateTime)}</div>
+                                                            <div className="mt-1 flex items-center gap-1 flex-wrap">
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${expAccent(show.experience)}`}>{show.experience || "Standard"}</span>
+                                                                <span className="text-[10px] text-gray-400">{show.format || "2D"}</span>
+                                                            </div>
+                                                            <div className="mt-1 text-[11px] font-semibold text-primary">{currency} {show.showPrice ?? show.price ?? 0}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
-
-                        {selectedMovieTheaters.length === 0 ? (
-                            <p className="text-sm text-gray-400">No showtimes for this movie today.</p>
-                        ) : (
-                            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-                                {selectedMovieTheaters.map((theater) => {
-                                    const label = theater.theaterAddress && theater.theaterCity ? `${theater.theaterAddress}, ${theater.theaterCity}` : theater.theaterCity || theater.theaterAddress || "";
-
-                                    return (
-                                        <div key={theater.theaterId} className="rounded-xl border border-white/12 bg-black/60 p-3">
-                                            <p className="text-sm font-semibold text-white">{theater.theaterName}</p>
-                                            {label && <p className="text-[11px] text-gray-400 mt-0.5">{label}</p>}
-
-                                            <div className="flex flex-wrap gap-2 mt-3">
-                                                {theater.shows.map((show) => (
-                                                    <div key={show._id} className="px-3 py-1.5 rounded-md border border-white/20 bg-black/50 text-xs flex flex-col gap-0.5">
-                                                        <span className="font-semibold text-gray-100">{formatTime(show.showDateTime)}</span>
-                                                        <span className="text-[11px] text-violet-300">{show.format || "2D"}</span>
-                                                        <span className="text-[11px] text-gray-400">{show.experience || "Standard"}</span>
-                                                        <span className="text-[11px] text-gray-300">Price: {currency} {show.showPrice ?? show.price ?? 0}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
                     </div>
-                </div>
-            )}
+                );
+            })()}
         </div>
     );
 };
