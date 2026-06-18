@@ -15,6 +15,30 @@ import timeFormat from "../../lib/timeFormat";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 
+// Animated count-up for stat numbers
+const useCountUp = (target, duration = 900) => {
+    const [val, setVal] = useState(0);
+    useEffect(() => {
+        const to = Number(target) || 0;
+        let raf;
+        const start = performance.now();
+        const tick = (now) => {
+            const p = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - p, 3);
+            if (p < 1) { setVal(to * eased); raf = requestAnimationFrame(tick); }
+            else setVal(to);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [target, duration]);
+    return val;
+};
+
+const StatValue = ({ value, prefix = "" }) => {
+    const n = useCountUp(value);
+    return <>{prefix}{Math.round(n).toLocaleString()}</>;
+};
+
 const Dashboard = () => {
     const { axios, getToken, user, image_base_url } = useAppContext();
     const currency = import.meta.env.VITE_CURRENCY;
@@ -159,32 +183,32 @@ const Dashboard = () => {
     const dashboardCards = [
         {
             title: "Total Bookings",
-            value: dashboardData.totalBookings || "0",
+            raw: Number(dashboardData.totalBookings || 0),
+            prefix: "",
             icon: ChartLineIcon,
             bar: "from-violet-400 to-purple-500",
             iconCls: "border-violet-400/30 bg-violet-400/10 text-violet-300",
         },
         {
             title: "Total Revenue",
-            value:
-                (currency || "") +
-                (dashboardData.totalRevenue?.toLocaleString?.() ??
-                    dashboardData.totalRevenue ??
-                    "0") || "0",
+            raw: Number(dashboardData.totalRevenue || 0),
+            prefix: currency || "",
             icon: CircleDollarSignIcon,
             bar: "from-amber-400 to-orange-500",
             iconCls: "border-amber-400/30 bg-amber-400/10 text-amber-300",
         },
         {
             title: "Movies Playing Today",
-            value: activeShowsByMovie.length || "0",
+            raw: activeShowsByMovie.length || 0,
+            prefix: "",
             icon: PlayCircleIcon,
             bar: "from-fuchsia-400 to-pink-500",
             iconCls: "border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-300",
         },
         {
             title: "Total Users",
-            value: dashboardData.totalUser || "0",
+            raw: Number(dashboardData.totalUser || 0),
+            prefix: "",
             icon: UsersIcon,
             bar: "from-sky-400 to-cyan-500",
             iconCls: "border-sky-400/30 bg-sky-400/10 text-sky-300",
@@ -286,7 +310,7 @@ const Dashboard = () => {
                         <div className="relative flex items-start justify-between">
                             <div>
                                 <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400">{card.title}</p>
-                                <p className="text-3xl font-bold mt-2 tracking-tight">{card.value}</p>
+                                <p className="text-3xl font-bold mt-2 tracking-tight"><StatValue value={card.raw} prefix={card.prefix} /></p>
                             </div>
                             <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${card.iconCls} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
                                 <card.icon className="w-5 h-5" />
@@ -320,6 +344,29 @@ const Dashboard = () => {
                                 {it.sub && <p className="text-xs text-gray-500 mt-1">{it.sub}</p>}
                             </div>
                         ))}
+                    </div>
+                );
+            })()}
+
+            {/* Shows by movie today (mini bar chart) */}
+            {(() => {
+                const top = [...activeShowsByMovie].sort((a, b) => b.shows.length - a.shows.length).slice(0, 6);
+                if (!top.length) return null;
+                const max = Math.max(...top.map((g) => g.shows.length), 1);
+                return (
+                    <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-4">Shows by movie today</p>
+                        <div className="space-y-3">
+                            {top.map((g) => (
+                                <div key={g.movieId} className="flex items-center gap-3">
+                                    <div className="w-28 sm:w-44 truncate text-sm text-gray-200 shrink-0">{g.movie.title}</div>
+                                    <div className="flex-1 h-2.5 rounded-full bg-white/5 overflow-hidden">
+                                        <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-500 transition-all duration-700 ease-out" style={{ width: `${(g.shows.length / max) * 100}%` }} />
+                                    </div>
+                                    <div className="w-8 text-right text-sm font-semibold text-violet-200">{g.shows.length}</div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 );
             })()}
@@ -386,7 +433,7 @@ const Dashboard = () => {
             {/* Modal: today's showtimes for selected movie */}
             {selectedMovieGroup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-3xl bg-black/90 border border-white/15 rounded-2xl p-5 relative">
+                    <div className="w-full max-w-3xl bg-gradient-to-br from-[#1b1426] via-[#100b16] to-black border border-primary/20 rounded-2xl p-5 relative shadow-[0_30px_80px_-30px_rgba(168,85,247,0.5)]">
                         <button onClick={closeMovieModal} className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 cursor-pointer">
                             <X className="w-5 h-5 text-gray-300" />
                         </button>
