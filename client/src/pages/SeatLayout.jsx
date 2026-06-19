@@ -1,5 +1,5 @@
 // pages/SeatLayout.jsx - Interactive seat selection page with real-time availability via SSE
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, Suspense } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowRightIcon, ArrowLeftIcon, ClockIcon } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
@@ -11,6 +11,9 @@ import HScroller from "../components/HScroller";
 import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 import { assets } from "../assets/assets";
+
+// 3D "view from seat" preview is lazy-loaded so three.js only downloads when opened.
+const SeatViewPreview = React.lazy(() => import("../components/SeatViewPreview"));
 
 /**
  * SeatLayout (updated - improved UX)
@@ -123,6 +126,7 @@ const SeatLayout = () => {
 
   const [serverOccupied, setServerOccupied] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const [previewSeat, setPreviewSeat] = useState(null);
   const [tempHold, setTempHold] = useState(null);
   const [serverHeldSeats, setServerHeldSeats] = useState([]);
   const [holdTimeLeft, setHoldTimeLeft] = useState(null);
@@ -665,6 +669,24 @@ const SeatLayout = () => {
     return { items, total };
   }, [selectedSeats, rowToSection]);
 
+  // ---- 3D "view from seat" geometry ----
+  const allRowsFlat = useMemo(() => layout.sections.flatMap((s) => s.rows), [layout]);
+  const previewMeta = useMemo(() => {
+    if (!previewSeat) return null;
+    const letter = previewSeat.match(/^[A-Za-z]+/)?.[0]?.toUpperCase();
+    const num = parseInt(previewSeat.replace(/^[A-Za-z]+/, ""), 10);
+    const rowIndex = Math.max(0, allRowsFlat.indexOf(letter));
+    const colIndex = Math.max(0, (Number.isFinite(num) ? num : 1) - 1);
+    const rows = allRowsFlat.length || 8;
+    const cols = layout.seatsPerRow || 12;
+    const ratio = rows > 1 ? rowIndex / (rows - 1) : 0.5;
+    let hint = "Balanced view — a solid pick.";
+    if (ratio < 0.25) hint = "Very close to the screen — large & immersive, you'll look up a little.";
+    else if (ratio > 0.75) hint = "Towards the back — the whole screen is in view, but smaller.";
+    else if (ratio >= 0.4 && ratio <= 0.6) hint = "Sweet spot — best overall view in the house. 👌";
+    return { rowIndex, colIndex, rows, cols, hint };
+  }, [previewSeat, allRowsFlat, layout]);
+
   const renderRow = (rowLabel) => {
     const seats = [];
     const seatsPerRow = layout.seatsPerRow || 12;
@@ -955,6 +977,7 @@ const SeatLayout = () => {
                   </div>
                 )}
               </div>
+              <button onClick={() => setPreviewSeat(selectedSeats[selectedSeats.length - 1])} className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-primary/30 text-primary text-xs hover:bg-primary/10 cursor-pointer">👁 View from seat</button>
               <button onClick={() => { setSelectedSeats([]); try { localStorage.removeItem(LS.SELECTED_SEATS(id, date)); } catch (e) { } }} className="px-3 py-2 rounded-xl border border-white/15 text-xs hover:bg-white/5 cursor-pointer">Clear</button>
               <button onClick={() => { if (!selectedSeats.length) { toast.error("Select seats first"); return; } bookTickets(); }} disabled={!selectedSeats.length} className="px-6 py-2.5 rounded-xl bg-gradient-to-b from-primary to-primary-dull text-black font-semibold text-sm cursor-pointer hover:brightness-105 active:scale-95 shadow-[0_10px_30px_-10px_rgba(168,85,247,0.9)]">
                 Proceed to Checkout
@@ -963,6 +986,52 @@ const SeatLayout = () => {
             </div>
           </div>
         </div>
+
+        {/* 3D "view from seat" preview modal */}
+        {previewSeat && previewMeta && (
+          <div
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 backdrop-blur-md p-4"
+            onClick={() => setPreviewSeat(null)}
+          >
+            <div
+              className="animate-pop-in w-full max-w-3xl rounded-3xl overflow-hidden border border-primary/25 bg-gradient-to-br from-[#15101c] to-black shadow-[0_40px_120px_-30px_rgba(168,85,247,0.6)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-violet-300 font-semibold">View from seat</p>
+                  <h3 className="text-lg font-bold">Seat {previewSeat}</h3>
+                </div>
+                <button
+                  onClick={() => setPreviewSeat(null)}
+                  aria-label="Close preview"
+                  className="h-9 w-9 flex items-center justify-center rounded-full bg-black/60 border border-white/15 text-gray-200 hover:bg-primary hover:text-black transition cursor-pointer"
+                >
+                  <span className="text-lg leading-none">✕</span>
+                </button>
+              </div>
+
+              <div className="relative h-[58vh] bg-black">
+                <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Loading 3D preview…</div>}>
+                  <SeatViewPreview
+                    rowIndex={previewMeta.rowIndex}
+                    colIndex={previewMeta.colIndex}
+                    rows={previewMeta.rows}
+                    cols={previewMeta.cols}
+                  />
+                </Suspense>
+                <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs text-gray-200 whitespace-nowrap">
+                  🖱️ Drag to look around · scroll to zoom
+                </div>
+              </div>
+
+              <div className="px-5 py-3 border-t border-white/10 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                <p className="text-sm text-gray-300">{previewMeta.hint}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Local Hold card (cooler) */}
         {tempHold && !cardHiddenLocal && selectedTimeSlot && (
