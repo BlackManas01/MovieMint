@@ -801,7 +801,7 @@ const MyBookings = () => {
                           )}
 
                           {/* ADD TO CALENDAR */}
-                          {item.isPaid && !item.__expired && (
+                          {item.isPaid && !item.__expired && !showtimePassed && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
