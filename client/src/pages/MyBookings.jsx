@@ -653,6 +653,21 @@ const MyBookings = () => {
               const isExpired = remaining <= 0;
               const isPaid = !!item.isPaid;
 
+              // Show-time gating: cancellation closes 15 min before showtime.
+              const showStartMs = (() => {
+                const raw = item.show?.showDateTime || item.show?.showTime || item.showDateTime || item.time;
+                const t = raw ? new Date(raw).getTime() : NaN;
+                return isNaN(t) ? null : t;
+              })();
+              const CANCEL_CUTOFF_MS = 15 * 60 * 1000;
+              const showtimePassed = !!showStartMs && Date.now() >= showStartMs;
+              const canCancel =
+                item.isPaid &&
+                item.status !== "cancelled" &&
+                !item.__expired &&
+                !!showStartMs &&
+                Date.now() < showStartMs - CANCEL_CUTOFF_MS;
+
               return (
                 <div
                   key={key}
@@ -722,6 +737,11 @@ const MyBookings = () => {
                       {item.__expired && (
                         <div className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
                           EXPIRED
+                        </div>
+                      )}
+                      {showtimePassed && item.isPaid && item.status !== "cancelled" && !item.__expired && (
+                        <div className="inline-block mt-2 ml-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-gray-300 border border-white/15">
+                          ⏰ Showtime passed
                         </div>
                       )}
                       {item.isPaid && !item.__expired && item.status !== "cancelled" && (
@@ -821,8 +841,8 @@ const MyBookings = () => {
                             Book again
                           </button>
 
-                          {/* CANCEL TICKET (paid, not expired, not already cancelled) */}
-                          {item.isPaid && !item.__expired && item.status !== "cancelled" && (
+                          {/* CANCEL TICKET (paid, more than 15 min before showtime) */}
+                          {canCancel && (
                             <button
                               onClick={(e) => { e.stopPropagation(); cancelTicket(item); }}
                               disabled={cancellingId === (item._id || item.id)}
@@ -830,6 +850,13 @@ const MyBookings = () => {
                             >
                               {cancellingId === (item._id || item.id) ? "Cancelling…" : "Cancel & refund"}
                             </button>
+                          )}
+
+                          {/* Cancellation window closed (within 15 min) but show not over yet */}
+                          {item.isPaid && item.status !== "cancelled" && !item.__expired && !canCancel && (
+                            <div className="text-[11px] text-gray-400 mt-1 text-right">
+                              {showtimePassed ? "⏰ Showtime passed" : "Cancellation closed (under 15 min to showtime)"}
+                            </div>
                           )}
 
                           {item.status === "cancelled" && (

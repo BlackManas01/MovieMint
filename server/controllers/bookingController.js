@@ -532,9 +532,14 @@ export const cancelBooking = async (req, res) => {
 
         const show = await Show.findById(booking.show);
 
-        // Don't allow cancellation once the show has started.
-        if (show?.showDateTime && new Date(show.showDateTime).getTime() <= Date.now()) {
-            return res.json({ success: false, message: "Show has already started — cannot cancel" });
+        // Cancellation closes 15 minutes before showtime (and once it has started).
+        const CANCEL_CUTOFF_MS = 15 * 60 * 1000;
+        const showMs = show?.showDateTime ? new Date(show.showDateTime).getTime() : 0;
+        if (showMs && Date.now() >= showMs - CANCEL_CUTOFF_MS) {
+            return res.json({
+                success: false,
+                message: "Cancellation window closed (within 15 minutes of showtime)",
+            });
         }
 
         // Refund via Stripe (best-effort — still cancel + free seats if this hiccups).
