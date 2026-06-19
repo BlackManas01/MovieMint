@@ -85,9 +85,11 @@ const HeroSection = () => {
     setDisplayIndex((prev) => prev - 1);
   }, [slides.length, isTransitioning]);
 
-  // Auto slide with delay, also respects transition lock
+  // Auto slide with delay, also respects transition lock and reduced-motion preference
   useEffect(() => {
     if (slides.length <= 1 || isPaused) return;
+    if (typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const timer = setInterval(() => {
       // Only move automatically when we are not in the middle of an animation
