@@ -351,7 +351,7 @@ const ReviewYourBooking = () => {
                                         <div className="mt-1 flex flex-wrap gap-1.5">
                                             {(booking.seats || []).length
                                                 ? booking.seats.map((s) => (
-                                                    <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/15 text-primary border border-primary/30">{s}</span>
+                                                    <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/15 text-violet-200 border border-primary/30">{s}</span>
                                                 ))
                                                 : <span className="text-gray-400">None</span>}
                                         </div>
@@ -375,21 +375,25 @@ const ReviewYourBooking = () => {
                                     const seatCount = (booking.seats || []).length || 1;
                                     const total = Number(amountValue) || 0;
                                     const snacks = Math.max(0, Number(booking.addonAmount) || 0);
-                                    const ticketsTotal = Math.max(0, total - snacks);
-                                    const conv = Math.round(ticketsTotal * 0.06 * 100) / 100;
-                                    const sub = Math.round((ticketsTotal - conv) * 100) / 100;
-                                    const Row = ({ label, val, bold }) => (
-                                        <div className={`flex items-center justify-between py-1 text-sm ${bold ? "font-semibold text-white" : "text-gray-300"}`}>
+                                    const fee = Math.max(0, Number(booking.platformFee) || 0);
+                                    const disc = Math.max(0, Number(booking.discount) || 0);
+                                    // Gross tickets subtotal (fallback for older bookings without the field).
+                                    const ticketsGross = Number(booking.seatsAmount) > 0
+                                        ? Number(booking.seatsAmount)
+                                        : Math.max(0, total - snacks - fee + disc);
+                                    const Row = ({ label, val, bold, accent }) => (
+                                        <div className={`flex items-center justify-between py-1 text-sm ${bold ? "font-semibold text-white" : accent ? "text-primary" : "text-gray-300"}`}>
                                             <span>{label}</span>
-                                            <span>{CURRENCY} {val.toFixed(2)}</span>
+                                            <span>{accent ? "−" : ""}{CURRENCY} {Math.abs(val).toFixed(2)}</span>
                                         </div>
                                     );
                                     return (
                                         <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] p-4 max-w-md">
                                             <div className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Price details</div>
-                                            <Row label={`Ticket(s) (${seatCount} × ${CURRENCY} ${(sub / seatCount).toFixed(2)})`} val={sub} />
+                                            <Row label={`Ticket(s) (${seatCount} × ${CURRENCY} ${(ticketsGross / seatCount).toFixed(2)})`} val={ticketsGross} />
+                                            {disc > 0 && <Row label={`Coupon ${booking.couponCode ? `(${booking.couponCode})` : ""}`} val={disc} accent />}
                                             {snacks > 0 && <Row label="Snacks & beverages" val={snacks} />}
-                                            <Row label="Convenience fee (incl. GST)" val={conv} />
+                                            <Row label="Booking fee (incl. GST)" val={fee} />
                                             <div className="my-2 border-t border-white/10" />
                                             <Row label="Amount payable" val={total} bold />
                                         </div>

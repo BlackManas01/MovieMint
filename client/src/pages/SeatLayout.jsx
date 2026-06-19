@@ -5,6 +5,7 @@ import { ArrowRightIcon, ArrowLeftIcon, ClockIcon } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
 import { formatScreen, seatPressure } from "../lib/screenLabel";
+import { platformFeeFor, applyCoupon } from "../lib/pricing";
 import BlurCircle from "../components/BlurCircle";
 import ErrorBoundary from "../components/ErrorBoundary";
 import FoodAddon from "../components/FoodAddon";
@@ -128,6 +129,8 @@ const SeatLayout = () => {
   const [serverOccupied, setServerOccupied] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [previewSeat, setPreviewSeat] = useState(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [tempHold, setTempHold] = useState(null);
   const [serverHeldSeats, setServerHeldSeats] = useState([]);
   const [holdTimeLeft, setHoldTimeLeft] = useState(null);
@@ -500,6 +503,7 @@ const SeatLayout = () => {
           showId: resolvedShowId,
           selectedSeats,
           addonAmount: foodSummary.total || 0,
+          couponCode: appliedCoupon?.code || "",
         },
         {
           headers: {
@@ -891,6 +895,24 @@ const SeatLayout = () => {
   const posterUrl = movie.poster_path ? image_base_url + movie.poster_path : null;
   const theaterNameToShow = selectedTimeSlot?.theaterName || selectedTimeSlot?.theater?.name || (groupedByTheater[0]?.theaterName || "");
 
+  // ---- Final price breakdown (tickets − coupon + booking fee + snacks) ----
+  const ticketsSubtotal = selectedBreakdown.total;
+  const couponResult = appliedCoupon?.code ? applyCoupon(appliedCoupon.code, ticketsSubtotal) : { discount: 0, valid: false };
+  const discount = couponResult.valid ? couponResult.discount : 0;
+  const platformFee = platformFeeFor(selectedSeats.length);
+  const grandTotal = Math.max(0, ticketsSubtotal - discount) + platformFee + foodSummary.total;
+
+  const handleApplyCoupon = () => {
+    const res = applyCoupon(couponInput, ticketsSubtotal);
+    if (res.valid) {
+      setAppliedCoupon({ code: res.code });
+      toast.success(`Coupon ${res.code} applied — you saved ${currency}${res.discount}`);
+    } else {
+      setAppliedCoupon(null);
+      toast.error("Invalid or not-applicable coupon");
+    }
+  };
+
   return (
     <div className="flex flex-col items-center px-6 md:px-16 lg:px-32 py-30 md:pt-44">
       {/* Back button */}
@@ -1084,29 +1106,54 @@ const SeatLayout = () => {
 
         {/* sticky bottom checkout bar */}
         <div className={`fixed bottom-0 left-0 w-full z-40 transition-all duration-300 ${selectedSeats.length && !isHoldActive() ? "translate-y-0" : "translate-y-full pointer-events-none"}`} aria-hidden={!selectedSeats.length || isHoldActive()}>
-          <div className="mx-auto max-w-5xl m-4 rounded-2xl border border-primary/25 bg-black/80 backdrop-blur-xl shadow-[0_-10px_60px_-20px_rgba(168,85,247,0.6)] px-5 py-4 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="text-[11px] uppercase tracking-[0.2em] text-gray-400">Selected Seats</div>
-              <div className="font-medium text-sm truncate text-primary">{selectedSeats.join(", ") || "None"}</div>
-              <div className="text-[11px] text-gray-500">{selectedBreakdown.items.length} seat(s) • incl. zone pricing</div>
+          <div className="mx-auto max-w-5xl m-4 rounded-2xl border border-primary/25 bg-black/80 backdrop-blur-xl shadow-[0_-10px_60px_-20px_rgba(168,85,247,0.6)] px-5 py-4">
+            {/* Coupon row */}
+            <div className="flex flex-wrap items-center gap-2 pb-3 mb-3 border-b border-white/10">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-gray-400">Coupon</span>
+              {appliedCoupon?.code ? (
+                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs bg-primary/15 border border-primary/30 text-violet-200">
+                  🎟️ {appliedCoupon.code} · −{currency}{discount}
+                  <button onClick={() => { setAppliedCoupon(null); setCouponInput(""); }} className="text-gray-300 hover:text-white cursor-pointer" aria-label="Remove coupon">✕</button>
+                </span>
+              ) : (
+                <>
+                  <input
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                    placeholder="Have a code? e.g. MOVIE50"
+                    className="flex-1 min-w-[10rem] max-w-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/15 text-sm text-gray-100 placeholder:text-gray-500 outline-none focus:border-primary/50"
+                  />
+                  <button onClick={handleApplyCoupon} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 border border-white/15 text-gray-100 hover:bg-primary hover:text-black transition cursor-pointer">Apply</button>
+                </>
+              )}
+              <span className="text-[10px] text-gray-500 hidden sm:inline">Try MOVIE50 · UPI50 · FLAT100</span>
             </div>
-            <div className="flex items-center gap-4 shrink-0">
-              <div className="text-right">
-                <div className="text-[11px] text-gray-400">Total</div>
-                <div className="text-xl font-semibold">{currency} {selectedBreakdown.total + foodSummary.total}</div>
-                {foodSummary.total > 0 && (
-                  <div className="text-[10px] text-gray-500">
-                    Tickets {currency}{selectedBreakdown.total} + Snacks {currency}{foodSummary.total}
-                  </div>
-                )}
-                <div className="text-[10px] text-gray-500">Incl. of GST &amp; fees</div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-gray-400">Selected Seats</div>
+                <div className="font-medium text-sm truncate text-primary">{selectedSeats.join(", ") || "None"}</div>
+                <div className="text-[11px] text-gray-500">
+                  Tickets {currency}{ticketsSubtotal}
+                  {discount > 0 && <> · <span className="text-primary">−{currency}{discount}</span></>}
+                  {" "}· Fee {currency}{platformFee}
+                  {foodSummary.total > 0 && <> · Snacks {currency}{foodSummary.total}</>}
+                </div>
               </div>
-              <button onClick={() => setPreviewSeat(selectedSeats[selectedSeats.length - 1])} className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-primary/30 text-primary text-xs hover:bg-primary/10 cursor-pointer">👁 View from seat</button>
-              <button onClick={() => { setSelectedSeats([]); try { localStorage.removeItem(LS.SELECTED_SEATS(id, date)); } catch (e) { } }} className="px-3 py-2 rounded-xl border border-white/15 text-xs hover:bg-white/5 cursor-pointer">Clear</button>
-              <button onClick={() => { if (!selectedSeats.length) { toast.error("Select seats first"); return; } bookTickets(); }} disabled={!selectedSeats.length} className="px-6 py-2.5 rounded-xl bg-gradient-to-b from-primary to-primary-dull text-black font-semibold text-sm cursor-pointer hover:brightness-105 active:scale-95 shadow-[0_10px_30px_-10px_rgba(168,85,247,0.9)]">
-                Proceed to Checkout
-                <ArrowRightIcon className="w-4 h-4 inline-block ml-2" />
-              </button>
+              <div className="flex items-center gap-4 shrink-0">
+                <div className="text-right">
+                  <div className="text-[11px] text-gray-400">Total payable</div>
+                  <div className="text-xl font-semibold">{currency} {grandTotal}</div>
+                  <div className="text-[10px] text-gray-500">Incl. GST · booking fee {currency}{platformFee}</div>
+                </div>
+                <button onClick={() => setPreviewSeat(selectedSeats[selectedSeats.length - 1])} className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-primary/30 text-primary text-xs hover:bg-primary/10 cursor-pointer">👁 View from seat</button>
+                <button onClick={() => { setSelectedSeats([]); try { localStorage.removeItem(LS.SELECTED_SEATS(id, date)); } catch (e) { } }} className="px-3 py-2 rounded-xl border border-white/15 text-xs hover:bg-white/5 cursor-pointer">Clear</button>
+                <button onClick={() => { if (!selectedSeats.length) { toast.error("Select seats first"); return; } bookTickets(); }} disabled={!selectedSeats.length} className="px-6 py-2.5 rounded-xl bg-gradient-to-b from-primary to-primary-dull text-black font-semibold text-sm cursor-pointer hover:brightness-105 active:scale-95 shadow-[0_10px_30px_-10px_rgba(168,85,247,0.9)]">
+                  Proceed to Checkout
+                  <ArrowRightIcon className="w-4 h-4 inline-block ml-2" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

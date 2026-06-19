@@ -247,7 +247,7 @@ const PendingPaymentBanner = () => {
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
                   <TicketIcon className="w-4 h-4 text-gray-400" />
                   {seatsArr.length ? seatsArr.map((s) => (
-                    <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/15 text-primary border border-primary/30">{s}</span>
+                    <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/15 text-violet-200 border border-primary/30">{s}</span>
                   )) : <span className="text-xs text-gray-400">No seats</span>}
                 </div>
 

@@ -406,7 +406,7 @@ const MovieDetails = () => {
 
           {/* Info chips — certificate / runtime / language / genres */}
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 border border-primary/30 text-primary">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 border border-primary/30 text-violet-200">
               {movie.adult ? "A · 18+" : "U/A · 13+"}
             </span>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/12 text-gray-200">
@@ -604,13 +604,13 @@ const MovieDetails = () => {
                         {[...new Set(theater.slots.map((s) => formatScreen(s.experience, s.format)))]
                           .slice(0, 4)
                           .map((f) => (
-                            <span key={f} className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary/10 border border-primary/25 text-primary">
+                            <span key={f} className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary/10 border border-primary/25 text-violet-200">
                               {f}
                             </span>
                           ))}
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 self-start whitespace-nowrap text-[11px] px-2.5 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary">
+                    <span className="inline-flex items-center gap-1.5 self-start whitespace-nowrap text-[11px] px-2.5 py-1 rounded-full bg-primary/10 border border-primary/25 text-violet-200">
                       <ShieldCheck className="w-3 h-3" />
                       Cancellation available
                     </span>

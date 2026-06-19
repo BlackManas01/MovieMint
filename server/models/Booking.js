@@ -5,6 +5,11 @@ const bookingSchema = new mongoose.Schema({
     user: { type: String, required: true, ref: "User" },       // Clerk user ID
     show: { type: String, required: true, ref: "Show" },       // Show being booked
     amount: { type: Number, required: true },                   // Total price paid
+    seatsAmount: { type: Number, default: 0 },                  // Tickets subtotal (before discount)
+    addonAmount: { type: Number, default: 0 },                  // Snacks & beverages
+    platformFee: { type: Number, default: 0 },                  // Booking/convenience fee
+    discount: { type: Number, default: 0 },                     // Coupon discount applied
+    couponCode: { type: String, default: "" },                  // Coupon used (if any)
     seats: { type: Array, required: true },                     // Array of seat IDs (e.g., ["A1", "A2"])
     isPaid: { type: Boolean, default: false },                  // Whether payment is confirmed
     paymentLink: { type: String },                              // Stripe checkout URL

@@ -15,6 +15,21 @@ const STRIPE_CURRENCY = (process.env.STRIPE_CURRENCY || "inr").toLowerCase();
 const MAX_SEATS_PER_BOOKING = 10;
 const VALID_SEAT_REGEX = /^[A-Z]\d{1,2}$/;
 
+// ----- Booking fee + coupons (mirrors client/src/lib/pricing.js) -----
+const PLATFORM_FEE_PER_TICKET = 25;
+const COUPONS = {
+    MOVIE50: (t) => Math.min(150, Math.round(t * 0.5)),
+    FLAT100: (t) => (t >= 500 ? 100 : 0),
+    UPI50: () => 50,
+};
+const applyCouponServer = (code, ticketsSubtotal) => {
+    const c = String(code || "").toUpperCase().trim();
+    const fn = COUPONS[c];
+    if (!fn) return { code: "", discount: 0 };
+    const d = Math.max(0, Math.min(ticketsSubtotal, fn(ticketsSubtotal)));
+    return { code: d > 0 ? c : "", discount: d };
+};
+
 const HOLD_MINUTES = Number(process.env.BOOKING_HOLD_MINUTES || 10); // default 10 minutes
 
 // ----- Zone pricing (mirrors the client seat layout) -----
@@ -81,7 +96,7 @@ const cleanupExpiredHeldSeats = async (showDoc) => {
 export const createBooking = async (req, res) => {
     try {
         const { userId } = req.auth();
-        const { showId, selectedSeats = [], addonAmount = 0 } = req.body;
+        const { showId, selectedSeats = [], addonAmount = 0, couponCode = "" } = req.body;
         const { origin } = req.headers;
         const clerkUser = await clerkClient.users.getUser(userId);
 
@@ -139,7 +154,12 @@ export const createBooking = async (req, res) => {
 
         // Optional snacks & beverages add-on (validated, capped)
         const snacksAmount = Math.max(0, Math.min(10000, Number(addonAmount) || 0));
-        const totalAmount = seatsAmount + snacksAmount;
+
+        // Coupon discount (on tickets) + per-ticket booking fee.
+        const { code: appliedCoupon, discount } = applyCouponServer(couponCode, seatsAmount);
+        const platformFee = PLATFORM_FEE_PER_TICKET * selectedSeats.length;
+        const ticketsNet = Math.max(0, seatsAmount - discount);
+        const totalAmount = ticketsNet + platformFee + snacksAmount;
 
         // create booking (pending)
         const expiresAt = new Date(Date.now() + HOLD_MINUTES * 60 * 1000); // e.g., 10 minutes
@@ -154,6 +174,11 @@ export const createBooking = async (req, res) => {
 
             show: showId,
             amount: totalAmount,
+            seatsAmount,
+            addonAmount: snacksAmount,
+            platformFee,
+            discount,
+            couponCode: appliedCoupon,
             seats: selectedSeats,
             status: "pending",
             expiresAt,
@@ -180,8 +205,19 @@ export const createBooking = async (req, res) => {
                     {
                         price_data: {
                             currency: STRIPE_CURRENCY,
-                            product_data: { name: showData.movie?.title || "Ticket" },
-                            unit_amount: Math.round(seatsAmount * 100),
+                            product_data: {
+                                name: showData.movie?.title || "Ticket",
+                                description: discount > 0 ? `Tickets (coupon ${appliedCoupon} applied)` : "Movie tickets",
+                            },
+                            unit_amount: Math.round(ticketsNet * 100),
+                        },
+                        quantity: 1,
+                    },
+                    {
+                        price_data: {
+                            currency: STRIPE_CURRENCY,
+                            product_data: { name: "Booking fee" },
+                            unit_amount: Math.round(platformFee * 100),
                         },
                         quantity: 1,
                     },
