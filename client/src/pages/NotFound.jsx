@@ -1,8 +1,11 @@
 // pages/NotFound.jsx - Styled 404 page
-import React from "react";
+import React, { Suspense } from "react";
 import { Link } from "react-router-dom";
-import { FilmIcon, HomeIcon } from "lucide-react";
+import { HomeIcon } from "lucide-react";
 import BlurCircle from "../components/BlurCircle";
+
+// 3D film reel is lazy-loaded so three.js only downloads on this page.
+const FilmReel3D = React.lazy(() => import("../components/FilmReel3D"));
 
 const NotFound = () => {
   return (
@@ -10,9 +13,11 @@ const NotFound = () => {
       <BlurCircle top="80px" left="-60px" />
       <BlurCircle bottom="0px" right="-60px" />
 
-      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-white/15 bg-white/[0.03] mb-6">
-        <span className="absolute inset-0 rounded-full border border-dashed border-white/15 animate-[spin_9s_linear_infinite]" />
-        <FilmIcon className="relative w-9 h-9 text-primary/80" />
+      {/* 3D film reel — drag to spin it */}
+      <div className="relative h-44 w-44 md:h-52 md:w-52 mb-2">
+        <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">Loading…</div>}>
+          <FilmReel3D />
+        </Suspense>
       </div>
 
       <h1 className="text-shade text-6xl md:text-7xl font-bold mx-auto">404</h1>

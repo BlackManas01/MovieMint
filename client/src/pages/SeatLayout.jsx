@@ -684,8 +684,21 @@ const SeatLayout = () => {
     if (ratio < 0.25) hint = "Very close to the screen — large & immersive, you'll look up a little.";
     else if (ratio > 0.75) hint = "Towards the back — the whole screen is in view, but smaller.";
     else if (ratio >= 0.4 && ratio <= 0.6) hint = "Sweet spot — best overall view in the house. 👌";
-    return { rowIndex, colIndex, rows, cols, hint };
-  }, [previewSeat, allRowsFlat, layout]);
+    // Per-row zone colours (extract hex from each section's colorClass).
+    const rowColors = allRowsFlat.map((r) => {
+      const sec = rowToSection[r];
+      const m = sec?.colorClass?.match(/#([0-9A-Fa-f]{6})/);
+      return m ? `#${m[1]}` : "#2a2336";
+    });
+    // The movie still shown on the screen.
+    const mv = showData?.movie || {};
+    const screenImage = mv.backdrop_path
+      ? image_base_url + mv.backdrop_path
+      : mv.poster_path
+        ? image_base_url + mv.poster_path
+        : null;
+    return { rowIndex, colIndex, rows, cols, hint, rowColors, screenImage };
+  }, [previewSeat, allRowsFlat, layout, rowToSection, showData, image_base_url]);
 
   const renderRow = (rowLabel) => {
     const seats = [];
@@ -725,6 +738,17 @@ const SeatLayout = () => {
           </button>
 
           <div aria-hidden className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-9 h-1 rounded ${sec ? sec.colorClass : "bg-primary"} opacity-30`} />
+
+          {/* Hover eye → preview the view from this seat without selecting it */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setPreviewSeat(seatId); }}
+            aria-label={`Preview view from ${seatId}`}
+            title="Preview view from this seat"
+            className="absolute -top-2 -right-2 z-20 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-black/85 border border-primary/50 text-primary cursor-pointer hover:bg-primary hover:text-black transition"
+          >
+            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
 
           <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/90 text-white text-[11px] whitespace-nowrap opacity-0 pointer-events-none transition-opacity group-hover:opacity-100">
             {tooltipText}
@@ -1018,6 +1042,8 @@ const SeatLayout = () => {
                     colIndex={previewMeta.colIndex}
                     rows={previewMeta.rows}
                     cols={previewMeta.cols}
+                    screenImage={previewMeta.screenImage}
+                    rowColors={previewMeta.rowColors}
                   />
                 </Suspense>
                 <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs text-gray-200 whitespace-nowrap">
