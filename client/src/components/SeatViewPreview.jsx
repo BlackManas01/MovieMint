@@ -6,7 +6,7 @@
 // - Click any seat to instantly move your viewpoint there (and pick it).
 import React, { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, useTexture } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, useTexture, Text } from "@react-three/drei";
 import ErrorBoundary from "./ErrorBoundary";
 
 const SEAT_DX = 0.78;   // horizontal spacing between seats
@@ -30,12 +30,30 @@ function ImageScreen({ url }) {
         </mesh>
     );
 }
-function PlainScreen() {
+function PlainScreen({ label }) {
     return (
-        <mesh position={[0, SCREEN.y, SCREEN.z]}>
-            <planeGeometry args={[SCREEN.w, SCREEN.h]} />
-            <meshStandardMaterial color="#241a3a" emissive="#c084fc" emissiveIntensity={0.8} />
-        </mesh>
+        <group position={[0, SCREEN.y, SCREEN.z]}>
+            <mesh>
+                <planeGeometry args={[SCREEN.w, SCREEN.h]} />
+                <meshStandardMaterial color="#1a1330" emissive="#7c3aed" emissiveIntensity={0.5} />
+            </mesh>
+            {label ? (
+                <Text
+                    position={[0, 0, 0.12]}
+                    fontSize={1.0}
+                    maxWidth={SCREEN.w * 0.85}
+                    lineHeight={1.1}
+                    textAlign="center"
+                    anchorX="center"
+                    anchorY="middle"
+                    color="#ffffff"
+                    outlineWidth={0.015}
+                    outlineColor="#160f24"
+                >
+                    {label}
+                </Text>
+            ) : null}
+        </group>
     );
 }
 
@@ -76,7 +94,7 @@ function Seat({ position, color, status, onSelect }) {
     );
 }
 
-function Scene({ rows, cols, rowIndex, colIndex, screenImage, rowColors, seatStatus, onPickSeat }) {
+function Scene({ rows, cols, rowIndex, colIndex, screenImage, screenLabel, rowColors, seatStatus, onPickSeat }) {
     // Eye position at the chosen seat.
     const eye = useMemo(
         () => [seatX(colIndex, cols), seatBaseY(rowIndex) + EYE, seatZ(rowIndex)],
@@ -111,10 +129,8 @@ function Scene({ rows, cols, rowIndex, colIndex, screenImage, rowColors, seatSta
                 rotateSpeed={0.32}
                 minDistance={cam.D}
                 maxDistance={cam.D}
-                minPolarAngle={clamp(cam.polar - 0.32, 0.05, Math.PI - 0.05)}
-                maxPolarAngle={clamp(cam.polar + 0.3, 0.05, Math.PI - 0.05)}
-                minAzimuthAngle={cam.azimuth - 1.15}
-                maxAzimuthAngle={cam.azimuth + 1.15}
+                minPolarAngle={0.2}
+                maxPolarAngle={1.95}
             />
 
             <ambientLight intensity={0.32} />
@@ -128,9 +144,9 @@ function Scene({ rows, cols, rowIndex, colIndex, screenImage, rowColors, seatSta
             </mesh>
             {/* If the movie still fails to load as a texture, fall back to the
                 glowing plain screen instead of crashing the whole preview. */}
-            <ErrorBoundary fallback={<PlainScreen />}>
-                <Suspense fallback={<PlainScreen />}>
-                    {screenImage ? <ImageScreen url={screenImage} /> : <PlainScreen />}
+            <ErrorBoundary fallback={<PlainScreen label={screenLabel} />}>
+                <Suspense fallback={<PlainScreen label={screenLabel} />}>
+                    {screenImage ? <ImageScreen url={screenImage} /> : <PlainScreen label={screenLabel} />}
                 </Suspense>
             </ErrorBoundary>
 
@@ -179,6 +195,7 @@ export default function SeatViewPreview({
     rows = 8,
     cols = 10,
     screenImage = null,
+    screenLabel = null,
     rowColors = null,
     seatStatus = null,
     onPickSeat = null,
@@ -194,6 +211,7 @@ export default function SeatViewPreview({
                     rowIndex={rowIndex}
                     colIndex={colIndex}
                     screenImage={screenImage}
+                    screenLabel={screenLabel}
                     rowColors={rowColors}
                     seatStatus={seatStatus}
                     onPickSeat={onPickSeat}

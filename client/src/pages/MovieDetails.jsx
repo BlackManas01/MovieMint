@@ -540,6 +540,20 @@ const MovieDetails = () => {
                           </span>
                         ))}
                       </div>
+                      {/* Live detail: how many shows + which formats this theatre offers today */}
+                      <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
+                          <Clock className="w-3 h-3 text-primary/70" />
+                          {theater.slots.length} show{theater.slots.length === 1 ? "" : "s"} today
+                        </span>
+                        {[...new Set(theater.slots.map((s) => formatScreen(s.experience, s.format)))]
+                          .slice(0, 4)
+                          .map((f) => (
+                            <span key={f} className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary/10 border border-primary/25 text-primary">
+                              {f}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                     <span className="inline-flex items-center gap-1.5 self-start whitespace-nowrap text-[11px] px-2.5 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary">
                       <ShieldCheck className="w-3 h-3" />

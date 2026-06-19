@@ -1,7 +1,7 @@
 // pages/UpcomingMovieDetails.jsx - Detail page for upcoming (unreleased) movies with trailers
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { StarIcon, PlayCircleIcon, XCircle } from "lucide-react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { StarIcon, PlayCircleIcon, XCircle, ArrowLeft } from "lucide-react";
 import Loading from "../components/Loading";
 import HScroller from "../components/HScroller";
 import { useAppContext } from "../context/AppContext";
@@ -11,6 +11,7 @@ import MovieDetailSkeleton from "../components/MovieDetailSkeleton";
 
 const UpcomingMovieDetails = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { id } = useParams();
 
     const { axios, image_base_url } = useAppContext();
@@ -54,12 +55,12 @@ const UpcomingMovieDetails = () => {
     if (showError && !movie) {
         return (
             <div className="h-screen flex flex-col justify-center items-center text-gray-400">
-                <XCircle size={50} className="text-red-500 mb-3" />
+                <XCircle size={48} className="text-gray-500 mb-3" />
                 <p className="text-lg mb-4">{error || "Failed to load details"}</p>
 
                 <button
-                    onClick={() => navigate("/movies")}
-                    className="px-6 py-2 bg-primary rounded-lg hover:bg-primary-dull transition cursor-pointer active:scale-95"
+                    onClick={() => navigate(location.state?.from || "/movies")}
+                    className="px-6 py-2 bg-primary text-black rounded-lg hover:bg-primary-dull transition cursor-pointer active:scale-95"
                 >
                     Go Back
                 </button>
@@ -74,7 +75,14 @@ const UpcomingMovieDetails = () => {
     const runtimeText = movie.runtime ? timeFormat(movie.runtime) : "";
 
     return (
-        <div className="px-6 md:px-16 lg:px-40 pt-28 text-white">
+        <div className="px-6 md:px-16 lg:px-40 pt-30 md:pt-50 text-white">
+            {/* Back button */}
+            <button
+                onClick={() => navigate(location.state?.from || "/movies")}
+                className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 hover:text-white transition cursor-pointer"
+            >
+                <ArrowLeft className="w-4 h-4" /> Back
+            </button>
             {/* Trailer popup */}
             {showTrailer && movie.trailer && (
                 <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 backdrop-blur-sm">

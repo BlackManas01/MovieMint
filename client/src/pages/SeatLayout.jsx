@@ -743,7 +743,7 @@ const SeatLayout = () => {
         return "available";
       })
     );
-    return { rowIndex, colIndex, rows, cols, hint, rowColors, screenImage, seatStatus };
+    return { rowIndex, colIndex, rows, cols, hint, rowColors, screenImage, screenLabel: mv.title || "", seatStatus };
   }, [previewSeat, allRowsFlat, layout, rowToSection, showData, image_base_url, serverConfirmedOccupied, serverHeldSeats, syntheticOccupied, tempHold, selectedSeats]);
 
   // Click a seat inside the 3D view → instantly move the viewpoint there (and pick it).
@@ -892,7 +892,7 @@ const SeatLayout = () => {
       </div>
 
       {/* Movie banner */}
-      <div className="w-full max-w-4xl mb-5 rounded-2xl border border-primary/20 bg-gradient-to-br from-[#15101c] to-black p-5 shadow-[0_20px_60px_-35px_rgba(168,85,247,0.5)]">
+      <div className="w-full max-w-4xl mb-5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 shadow-[0_20px_60px_-35px_rgba(168,85,247,0.5)]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
             {posterUrl ? (
@@ -919,7 +919,7 @@ const SeatLayout = () => {
       </div>
 
       {/* timings bar */}
-      <div className="w-full max-w-4xl bg-gradient-to-br from-[#15101c] to-black border border-primary/15 rounded-2xl p-5 shadow-[0_20px_60px_-35px_rgba(168,85,247,0.5)]">
+      <div className="w-full max-w-4xl bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl p-5 shadow-[0_20px_60px_-35px_rgba(168,85,247,0.5)]">
         <p className="text-[11px] uppercase tracking-[0.24em] text-gray-400 mb-3 flex items-center gap-2"><ClockIcon className="w-3.5 h-3.5 text-primary" /> Showtimes — {theaterNameToShow || "Select a timing"}</p>
         <div className="">
           {(() => {
@@ -1142,6 +1142,7 @@ const SeatLayout = () => {
                       rows={previewMeta.rows}
                       cols={previewMeta.cols}
                       screenImage={previewMeta.screenImage}
+                      screenLabel={previewMeta.screenLabel}
                       rowColors={previewMeta.rowColors}
                       seatStatus={previewMeta.seatStatus}
                       onPickSeat={pickSeatFrom3D}
@@ -1151,7 +1152,7 @@ const SeatLayout = () => {
                 {/* top vignette so the header reads cleanly */}
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/60 to-transparent" />
                 <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs text-gray-100 whitespace-nowrap backdrop-blur-sm">
-                  🖱️ Drag to look around · 🪑 click any seat to sit there
+                  🖱️ Drag to look around (360°) · 🪑 click any seat to sit there
                 </div>
               </div>
 
