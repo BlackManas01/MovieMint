@@ -11,6 +11,8 @@ export const AppContext = createContext();
 export const AppProvider = ({ children }) => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [shows, setShows] = useState([]);
+    const [loadingShows, setLoadingShows] = useState(true);
+    const [showsError, setShowsError] = useState(false);
     const [favoriteMovies, setFavoriteMovies] = useState([]);
     const [city, setCityState] = useState(() => {
         try {
@@ -96,15 +98,21 @@ export const AppProvider = ({ children }) => {
     };
 
     const fetchShows = async () => {
+        setLoadingShows(true);
+        setShowsError(false);
         try {
             const { data } = await axios.get("/api/show/all");
             if (data.success) {
-                setShows(data.shows);
+                setShows(Array.isArray(data.shows) ? data.shows : []);
             } else {
+                setShowsError(true);
                 toast.error(data.message);
             }
         } catch (error) {
             console.error(error);
+            setShowsError(true);
+        } finally {
+            setLoadingShows(false);
         }
     };
 
@@ -145,6 +153,9 @@ export const AppProvider = ({ children }) => {
         navigate,
         isAdmin,
         shows,
+        loadingShows,
+        showsError,
+        refetchShows: fetchShows,
         favoriteMovies,
         fetchFavoriteMovies,
         image_base_url,

@@ -7,6 +7,7 @@
 import React, { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, useTexture } from "@react-three/drei";
+import ErrorBoundary from "./ErrorBoundary";
 
 const SEAT_DX = 0.78;   // horizontal spacing between seats
 const ROW_DZ = 1.25;    // depth between rows (legroom)
@@ -125,9 +126,13 @@ function Scene({ rows, cols, rowIndex, colIndex, screenImage, rowColors, seatSta
                 <planeGeometry args={[SCREEN.w + 0.9, SCREEN.h + 0.9]} />
                 <meshStandardMaterial color="#07070d" />
             </mesh>
-            <Suspense fallback={<PlainScreen />}>
-                {screenImage ? <ImageScreen url={screenImage} /> : <PlainScreen />}
-            </Suspense>
+            {/* If the movie still fails to load as a texture, fall back to the
+                glowing plain screen instead of crashing the whole preview. */}
+            <ErrorBoundary fallback={<PlainScreen />}>
+                <Suspense fallback={<PlainScreen />}>
+                    {screenImage ? <ImageScreen url={screenImage} /> : <PlainScreen />}
+                </Suspense>
+            </ErrorBoundary>
 
             {/* Room shell (floor / ceiling / walls) for an enclosed-hall feel */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -2]}>

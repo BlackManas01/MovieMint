@@ -13,7 +13,18 @@ class ErrorBoundary extends React.Component {
 
     componentDidCatch(error, info) {
         // Log for debugging; in production this could be sent to a monitoring service.
-        console.error("App error boundary caught:", error, info);
+        console.error("Error boundary caught:", error, info);
+    }
+
+    componentDidMount() {
+        // Recover automatically when the user navigates (e.g. browser Back),
+        // so a crashed view doesn't stay stuck on the error screen.
+        this._reset = () => { if (this.state.hasError) this.setState({ hasError: false }); };
+        window.addEventListener("popstate", this._reset);
+    }
+
+    componentWillUnmount() {
+        if (this._reset) window.removeEventListener("popstate", this._reset);
     }
 
     handleReload = () => {
@@ -23,6 +34,9 @@ class ErrorBoundary extends React.Component {
 
     render() {
         if (!this.state.hasError) return this.props.children;
+
+        // A custom, lighter fallback (used for isolated widgets like the 3D preview).
+        if (this.props.fallback !== undefined) return this.props.fallback;
 
         return (
             <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 text-white">
@@ -34,12 +48,20 @@ class ErrorBoundary extends React.Component {
                 <p className="mt-2 max-w-md text-sm text-gray-400">
                     An unexpected error occurred. Let's get you back to the movies.
                 </p>
-                <button
-                    onClick={this.handleReload}
-                    className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium bg-primary hover:bg-primary-dull text-black transition cursor-pointer"
-                >
-                    Back to home
-                </button>
+                <div className="mt-6 flex items-center gap-3">
+                    <button
+                        onClick={() => { this.setState({ hasError: false }); window.history.back(); }}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium bg-white/5 border border-white/15 text-gray-200 hover:border-primary/40 transition cursor-pointer"
+                    >
+                        ← Go back
+                    </button>
+                    <button
+                        onClick={this.handleReload}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium bg-primary hover:bg-primary-dull text-black transition cursor-pointer"
+                    >
+                        Back to home
+                    </button>
+                </div>
             </div>
         );
     }

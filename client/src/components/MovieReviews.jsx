@@ -105,14 +105,14 @@ const MovieReviews = ({ movie }) => {
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
           {reviews.map((r) => (
             <div key={r.name} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-sm font-semibold">
-                    {r.name.charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium truncate">{r.name}</span>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-sm font-semibold">
+                  {r.name.charAt(0)}
                 </div>
-                <Stars value={r.rating} />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{r.name}</div>
+                  <Stars value={r.rating} />
+                </div>
               </div>
               <p className="text-sm text-gray-300 mt-3 leading-relaxed">{r.text}</p>
             </div>

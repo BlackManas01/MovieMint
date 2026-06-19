@@ -9,6 +9,9 @@ import { clerkClient } from "@clerk/express";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// App prices are in Indian Rupees, so charge in INR (paise) unless overridden.
+const STRIPE_CURRENCY = (process.env.STRIPE_CURRENCY || "inr").toLowerCase();
+
 const MAX_SEATS_PER_BOOKING = 10;
 const VALID_SEAT_REGEX = /^[A-Z]\d{1,2}$/;
 
@@ -176,7 +179,7 @@ export const createBooking = async (req, res) => {
                 const line_items = [
                     {
                         price_data: {
-                            currency: process.env.STRIPE_CURRENCY || "usd",
+                            currency: STRIPE_CURRENCY,
                             product_data: { name: showData.movie?.title || "Ticket" },
                             unit_amount: Math.round(seatsAmount * 100),
                         },
@@ -187,7 +190,7 @@ export const createBooking = async (req, res) => {
                 if (snacksAmount > 0) {
                     line_items.push({
                         price_data: {
-                            currency: process.env.STRIPE_CURRENCY || "usd",
+                            currency: STRIPE_CURRENCY,
                             product_data: { name: "Snacks & Beverages" },
                             unit_amount: Math.round(snacksAmount * 100),
                         },

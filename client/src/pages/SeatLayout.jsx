@@ -6,6 +6,7 @@ import { useClerk } from "@clerk/clerk-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
 import { formatScreen, seatPressure } from "../lib/screenLabel";
 import BlurCircle from "../components/BlurCircle";
+import ErrorBoundary from "../components/ErrorBoundary";
 import FoodAddon from "../components/FoodAddon";
 import HScroller from "../components/HScroller";
 import toast from "react-hot-toast";
@@ -786,13 +787,15 @@ const SeatLayout = () => {
             onClick={() => handleSeatClick(seatId)}
             aria-label={tooltipText}
             className={`relative h-9 w-9 rounded-t-[11px] rounded-b-md border text-[11px] font-medium flex items-center justify-center transition-all duration-200 will-change-transform
-              ${serverOcc ? "bg-white/[0.05] text-gray-500 border-white/5 pointer-events-none cursor-not-allowed" : ""}
+              ${serverOcc ? "bg-neutral-600/60 text-gray-400 border-white/10 pointer-events-none cursor-not-allowed" : ""}
               ${localHeld ? "bg-transparent border-transparent pointer-events-none" : ""}
               ${selected ? "bg-gradient-to-b from-primary to-primary-dull text-black border-primary -translate-y-0.5 scale-105 shadow-[0_8px_22px_-6px_rgba(168,85,247,0.95)]" : ""}
-              ${!serverOcc && !localHeld && !selected ? "bg-gradient-to-b from-white/10 to-white/[0.02] text-gray-200 border-white/10 cursor-pointer hover:-translate-y-0.5 hover:scale-110 hover:border-primary/60 hover:from-primary/25 hover:to-primary/5 hover:shadow-[0_8px_20px_-8px_rgba(168,85,247,0.85)]" : ""}
+              ${!serverOcc && !localHeld && !selected ? "bg-gradient-to-b from-white/15 to-white/[0.03] text-gray-200 border-white/15 cursor-pointer hover:-translate-y-0.5 hover:scale-110 hover:border-primary/60 hover:from-primary/25 hover:to-primary/5 hover:shadow-[0_8px_20px_-8px_rgba(168,85,247,0.85)]" : ""}
             `}
           >
-            {serverOcc ? "X" : localHeld ? (
+            {serverOcc ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+            ) : localHeld ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <circle cx="12" cy="12" r="9" fill="#E36B17" />
                 <path d="M12 7V12L15 14" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -802,16 +805,18 @@ const SeatLayout = () => {
 
           <div aria-hidden className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-9 h-1 rounded ${sec ? sec.colorClass : "bg-primary"} opacity-30`} />
 
-          {/* Hover eye → preview the view from this seat without selecting it */}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); setPreviewSeat(seatId); }}
-            aria-label={`Preview view from ${seatId}`}
-            title="Preview view from this seat"
-            className="absolute -top-2 -right-2 z-20 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-black/85 border border-primary/50 text-primary cursor-pointer hover:bg-primary hover:text-black transition"
-          >
-            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+          {/* Hover eye → preview the view from this seat (only for seats you can actually pick) */}
+          {!serverOcc && !localHeld && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setPreviewSeat(seatId); }}
+              aria-label={`Preview view from ${seatId}`}
+              title="Preview view from this seat"
+              className="absolute -top-2 -right-2 z-20 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-black/85 border border-primary/50 text-primary cursor-pointer hover:bg-primary hover:text-black transition"
+            >
+              <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          )}
 
           <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/90 text-white text-[11px] whitespace-nowrap opacity-0 pointer-events-none transition-opacity group-hover:opacity-100">
             {tooltipText}
@@ -1010,11 +1015,13 @@ const SeatLayout = () => {
 
             {/* Seat states */}
             <div className="flex items-center gap-1.5">
-              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-gradient-to-b from-white/15 to-white/[0.03] border border-white/10" />
+              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-gradient-to-b from-white/15 to-white/[0.03] border border-white/15" />
               <span className="text-[11px] text-gray-300">Available</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-white/[0.05] border border-white/10" />
+              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-neutral-600/60 border border-white/10 flex items-center justify-center">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" /></svg>
+              </span>
               <span className="text-[11px] text-gray-400">Booked</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -1072,6 +1079,7 @@ const SeatLayout = () => {
                     Tickets {currency}{selectedBreakdown.total} + Snacks {currency}{foodSummary.total}
                   </div>
                 )}
+                <div className="text-[10px] text-gray-500">Incl. of GST &amp; fees</div>
               </div>
               <button onClick={() => setPreviewSeat(selectedSeats[selectedSeats.length - 1])} className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-primary/30 text-primary text-xs hover:bg-primary/10 cursor-pointer">👁 View from seat</button>
               <button onClick={() => { setSelectedSeats([]); try { localStorage.removeItem(LS.SELECTED_SEATS(id, date)); } catch (e) { } }} className="px-3 py-2 rounded-xl border border-white/15 text-xs hover:bg-white/5 cursor-pointer">Clear</button>
@@ -1123,18 +1131,23 @@ const SeatLayout = () => {
               </div>
 
               <div className="relative h-[58vh] bg-black">
-                <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Loading 3D preview…</div>}>
-                  <SeatViewPreview
-                    rowIndex={previewMeta.rowIndex}
-                    colIndex={previewMeta.colIndex}
-                    rows={previewMeta.rows}
-                    cols={previewMeta.cols}
-                    screenImage={previewMeta.screenImage}
-                    rowColors={previewMeta.rowColors}
-                    seatStatus={previewMeta.seatStatus}
-                    onPickSeat={pickSeatFrom3D}
-                  />
-                </Suspense>
+                <ErrorBoundary
+                  key={previewSeat}
+                  fallback={<div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center text-sm text-gray-400"><span className="text-2xl">🪑</span>3D preview couldn't load for this seat.</div>}
+                >
+                  <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Loading 3D preview…</div>}>
+                    <SeatViewPreview
+                      rowIndex={previewMeta.rowIndex}
+                      colIndex={previewMeta.colIndex}
+                      rows={previewMeta.rows}
+                      cols={previewMeta.cols}
+                      screenImage={previewMeta.screenImage}
+                      rowColors={previewMeta.rowColors}
+                      seatStatus={previewMeta.seatStatus}
+                      onPickSeat={pickSeatFrom3D}
+                    />
+                  </Suspense>
+                </ErrorBoundary>
                 {/* top vignette so the header reads cleanly */}
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/60 to-transparent" />
                 <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs text-gray-100 whitespace-nowrap backdrop-blur-sm">

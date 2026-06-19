@@ -1,6 +1,6 @@
 // pages/Movies.jsx - Now Showing / Coming Soon in one place, city-aware, with filters & sort
 import React, { useEffect, useRef, useState } from "react";
-import { FilmIcon, CalendarClockIcon, ChevronDown } from "lucide-react";
+import { FilmIcon, CalendarClockIcon, ChevronDown, AlertTriangleIcon } from "lucide-react";
 import MovieCard from "../components/MovieCard";
 import BlurCircle from "../components/BlurCircle";
 import EmptyState from "../components/EmptyState";
@@ -10,7 +10,7 @@ import { movieInCity } from "../lib/cities";
 import { genreNames } from "../lib/genres";
 
 const Movies = () => {
-  const { shows, loadingShows, axios, city } = useAppContext();
+  const { shows, loadingShows, showsError, refetchShows, axios, city } = useAppContext();
 
   const [tab, setTab] = useState("now"); // "now" | "coming"
   const [activeGenre, setActiveGenre] = useState("All");
@@ -101,9 +101,7 @@ const Movies = () => {
 
   const isLoading =
     tab === "now"
-      ? loadingShows ||
-        shows == null ||
-        (Array.isArray(shows) && shows.length === 0 && !showEmptyMessage)
+      ? loadingShows
       : upcoming === null || loadingUpcoming;
 
   return (
@@ -190,6 +188,20 @@ const Movies = () => {
             <MovieCardSkeleton key={i} />
           ))}
         </div>
+      ) : tab === "now" && showsError ? (
+        <EmptyState
+          icon={AlertTriangleIcon}
+          title="Couldn't load movies"
+          subtitle="Something went wrong while fetching shows. Please check your connection and try again."
+          action={
+            <button
+              onClick={() => refetchShows && refetchShows()}
+              className="px-6 py-2.5 rounded-full text-sm font-medium bg-primary hover:bg-primary-dull text-black transition cursor-pointer"
+            >
+              Try again
+            </button>
+          }
+        />
       ) : visible.length === 0 ? (
         <EmptyState
           icon={tab === "now" ? FilmIcon : CalendarClockIcon}
