@@ -4,7 +4,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowRightIcon, ArrowLeftIcon, ClockIcon } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
-import { formatScreen } from "../lib/screenLabel";
+import { formatScreen, seatPressure } from "../lib/screenLabel";
 import BlurCircle from "../components/BlurCircle";
 import FoodAddon from "../components/FoodAddon";
 import HScroller from "../components/HScroller";
@@ -442,6 +442,9 @@ const SeatLayout = () => {
     if (serverHeldSeats.includes(seatId))
       return toast("This seat is currently held");
 
+    if (syntheticOccupied.has(seatId) && !selectedSeats.includes(seatId))
+      return toast("This seat is already booked");
+
     if (tempHold && tempHold.seats.includes(seatId)) return toast("This seat is currently held (pending payment)");
     setSelectedSeats((prev) => {
       const next = prev.includes(seatId) ? prev.filter((s) => s !== seatId) : [...prev, seatId];
@@ -671,6 +674,34 @@ const SeatLayout = () => {
 
   // ---- 3D "view from seat" geometry ----
   const allRowsFlat = useMemo(() => layout.sections.flatMap((s) => s.rows), [layout]);
+
+  // Synthetic occupancy so the seat map visually matches the show's "fill" level
+  // (Available / Filling fast / Almost full) shown on the showtime. Deterministic
+  // per show, capped so a few seats always remain bookable.
+  const syntheticOccupied = useMemo(() => {
+    const showId = selectedTimeSlot?.showId;
+    if (!showId) return new Set();
+    const ratio = Math.min(0.9, seatPressure(showId));
+    if (ratio <= 0.02) return new Set();
+    const cols = layout.seatsPerRow || 12;
+    const seatIds = [];
+    allRowsFlat.forEach((r) => {
+      for (let i = 1; i <= cols; i++) seatIds.push(`${r}${i}`);
+    });
+    const target = Math.floor(ratio * seatIds.length);
+    if (target <= 0) return new Set();
+    // Seeded shuffle from the show id (stable across renders).
+    let h = 0;
+    const s = String(showId);
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    const rand = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
+    for (let i = seatIds.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [seatIds[i], seatIds[j]] = [seatIds[j], seatIds[i]];
+    }
+    return new Set(seatIds.slice(0, target));
+  }, [selectedTimeSlot, layout, allRowsFlat]);
+
   const previewMeta = useMemo(() => {
     if (!previewSeat) return null;
     const letter = previewSeat.match(/^[A-Za-z]+/)?.[0]?.toUpperCase();
@@ -701,17 +732,18 @@ const SeatLayout = () => {
     const seatStatus = allRowsFlat.map((label) =>
       Array.from({ length: cols }).map((_, ci) => {
         const sid = `${label}${ci + 1}`;
+        if (selectedSeats.includes(sid)) return "selected";
         if (
           serverConfirmedOccupied.includes(sid) ||
           serverHeldSeats.includes(sid) ||
+          syntheticOccupied.has(sid) ||
           (tempHold && tempHold.seats?.includes(sid))
         ) return "occupied";
-        if (selectedSeats.includes(sid)) return "selected";
         return "available";
       })
     );
     return { rowIndex, colIndex, rows, cols, hint, rowColors, screenImage, seatStatus };
-  }, [previewSeat, allRowsFlat, layout, rowToSection, showData, image_base_url, serverConfirmedOccupied, serverHeldSeats, tempHold, selectedSeats]);
+  }, [previewSeat, allRowsFlat, layout, rowToSection, showData, image_base_url, serverConfirmedOccupied, serverHeldSeats, syntheticOccupied, tempHold, selectedSeats]);
 
   // Click a seat inside the 3D view → instantly move the viewpoint there (and pick it).
   const pickSeatFrom3D = (r, c) => {
@@ -721,6 +753,7 @@ const SeatLayout = () => {
     if (
       serverConfirmedOccupied.includes(seatId) ||
       serverHeldSeats.includes(seatId) ||
+      (syntheticOccupied.has(seatId) && !selectedSeats.includes(seatId)) ||
       (tempHold && tempHold.seats?.includes(seatId))
     ) {
       toast("That seat isn't available");
@@ -737,11 +770,11 @@ const SeatLayout = () => {
 
     for (let i = 1; i <= seatsPerRow; i++) {
       const seatId = `${rowLabel}${i}`;
-      const serverOcc = serverConfirmedOccupied.includes(seatId);
+      const selected = selectedSeats.includes(seatId);
+      const serverOcc = !selected && (serverConfirmedOccupied.includes(seatId) || syntheticOccupied.has(seatId));
       const localHeld =
         (tempHold && tempHold.seats.includes(seatId)) ||
         serverHeldSeats.includes(seatId);
-      const selected = selectedSeats.includes(seatId);
       const sec = rowToSection[rowLabel];
       const secLabel = sec ? sec.label : "ZONE";
       const secPrice = sec ? sec.price : basePrice;
@@ -960,28 +993,37 @@ const SeatLayout = () => {
         <BlurCircle bottom="0" right="0" />
 
         {/* legend */}
-        <div className="w-full max-w-4xl mx-auto mb-4 flex justify-center">
-          <div className="flex items-center gap-3">
+        <div className="w-full max-w-4xl mx-auto mb-5 flex justify-center px-2">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm px-5 py-3 shadow-[0_18px_50px_-30px_rgba(168,85,247,0.6)]">
+            {/* Zones (price tiers) */}
             {layout.sections.map((sec) => (
-              <div key={sec.key} className="flex items-center gap-3 bg-black/50 px-3 py-2 rounded-md border border-white/10">
-                <div className={`w-5 h-5 rounded ${sec.colorClass}`} />
-                <div className="text-sm">
-                  <div className="font-medium">{sec.label}</div>
-                  <div className="text-xs text-gray-400">{currency} {sec.price}</div>
+              <div key={sec.key} className="flex items-center gap-2">
+                <span className={`h-5 w-5 rounded-t-[7px] rounded-b-[3px] ${sec.colorClass} shadow-inner shadow-black/40`} />
+                <div className="leading-tight">
+                  <div className="text-[11px] font-semibold tracking-wide text-gray-200">{sec.label}</div>
+                  <div className="text-[10px] text-gray-400">{currency}{sec.price}</div>
                 </div>
               </div>
             ))}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-black/50 border border-white/10">
-              <div className="w-4 h-4 bg-white/6 rounded flex items-center justify-center text-xs text-gray-300">X</div>
-              <div className="text-xs text-gray-300">Occupied</div>
+
+            <span className="hidden sm:block h-8 w-px bg-white/10" />
+
+            {/* Seat states */}
+            <div className="flex items-center gap-1.5">
+              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-gradient-to-b from-white/15 to-white/[0.03] border border-white/10" />
+              <span className="text-[11px] text-gray-300">Available</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-black/50 border border-white/10">
-              <div className="w-4 h-4 bg-orange-600 rounded flex items-center justify-center text-xs text-white">⏳</div>
-              <div className="text-xs text-gray-300">Held</div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-white/[0.05] border border-white/10" />
+              <span className="text-[11px] text-gray-400">Booked</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-black/50 border border-white/10">
-              <div className="w-4 h-4 bg-primary rounded" />
-              <div className="text-xs text-gray-300">Selected</div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-orange-500/80 border border-orange-400/40" />
+              <span className="text-[11px] text-gray-300">Held</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-gradient-to-b from-primary to-primary-dull border border-primary" />
+              <span className="text-[11px] text-gray-300">Selected</span>
             </div>
           </div>
         </div>

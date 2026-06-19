@@ -48,9 +48,6 @@ const CitySelector = ({ onDark = false }) => {
               {c}
             </button>
           ))}
-          <p className="px-3 py-2 text-[10px] text-gray-500 border-t border-white/10 mt-1">
-            More cities coming soon
-          </p>
         </div>
       )}
     </div>
