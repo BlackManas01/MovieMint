@@ -1,6 +1,6 @@
 // pages/MovieDetails.jsx - Full movie detail page with showtimes, trailers, cast, and date/theater selection
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Heart, PlayCircleIcon, StarIcon, X, Clapperboard, MapPin, Clock, ShieldCheck, ArrowLeft } from "lucide-react";
 import BlurCircle from "../components/BlurCircle";
 import timeFormat from "../lib/timeFormat";
@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 
 const MovieDetails = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
 
   const [show, setShow] = useState(null);            // holds `{ success, movie, dateTime }` from backend
@@ -286,7 +287,7 @@ const MovieDetails = () => {
 
       {/* Back button */}
       <button
-        onClick={() => navigate("/movies")}
+        onClick={() => navigate(location.state?.from || "/movies")}
         className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-200 hover:border-primary/40 hover:text-white transition cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" /> Back

@@ -1,7 +1,7 @@
 // src/components/MovieCard.jsx
 import { StarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import timeFormat from "../lib/timeFormat";
 import MovieCardSkeleton from "./MovieCardSkeleton"; // use your existing skeleton
@@ -21,6 +21,7 @@ import MovieCardSkeleton from "./MovieCardSkeleton"; // use your existing skelet
  */
 const MovieCard = ({ movie, isUpcoming = false, loading = false }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { image_base_url, axios } = useAppContext();
 
   // If parent tells us to show loading, render skeleton (no extra network)
@@ -30,7 +31,9 @@ const MovieCard = ({ movie, isUpcoming = false, loading = false }) => {
   if (!movieId) return null;
 
   const handleClick = () => {
-    navigate(isUpcoming ? `/upcoming/${movieId}` : `/movies/${movieId}`);
+    // Remember where we came from so the detail page's Back returns here (loop-proof).
+    const from = location.pathname + location.search;
+    navigate(isUpcoming ? `/upcoming/${movieId}` : `/movies/${movieId}`, { state: { from } });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

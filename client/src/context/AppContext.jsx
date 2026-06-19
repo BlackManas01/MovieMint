@@ -4,7 +4,7 @@ import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { normalizeCity } from "../lib/cities";
+import { CITIES, normalizeCity } from "../lib/cities";
 
 export const AppContext = createContext();
 
@@ -29,6 +29,44 @@ export const AppProvider = ({ children }) => {
             /* ignore */
         }
     };
+
+    // Auto-detect the user's city from their location on first visit only.
+    // If they've already picked a city we never override it, and if detection
+    // fails (denied / offline / unsupported city) we simply keep the default
+    // so they can choose manually from the city selector.
+    useEffect(() => {
+        let alreadyChosen = null;
+        try { alreadyChosen = localStorage.getItem("city"); } catch { /* ignore */ }
+        if (alreadyChosen) return;
+        if (typeof navigator === "undefined" || !navigator.geolocation) return;
+
+        let cancelled = false;
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                try {
+                    const { latitude, longitude } = pos.coords;
+                    const res = await fetch(
+                        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                    );
+                    const data = await res.json();
+                    const candidates = [data.city, data.locality, data.principalSubdivision]
+                        .filter(Boolean)
+                        .map((s) => String(s).toLowerCase());
+                    const match = CITIES.find((c) =>
+                        candidates.some((x) => x.includes(c.toLowerCase()) || c.toLowerCase().includes(x))
+                    );
+                    if (!cancelled && match) {
+                        setCityState(match);
+                        try { localStorage.setItem("city", match); } catch { /* ignore */ }
+                    }
+                } catch { /* ignore — fall back to manual selection */ }
+            },
+            () => { /* permission denied / error — keep manual selection */ },
+            { timeout: 8000, maximumAge: 600000 }
+        );
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const image_base_url = import.meta.env.VITE_TMDB_IMAGE_BASE_URL;
 
