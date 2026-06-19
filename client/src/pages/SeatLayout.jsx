@@ -697,8 +697,38 @@ const SeatLayout = () => {
       : mv.poster_path
         ? image_base_url + mv.poster_path
         : null;
-    return { rowIndex, colIndex, rows, cols, hint, rowColors, screenImage };
-  }, [previewSeat, allRowsFlat, layout, rowToSection, showData, image_base_url]);
+    // Per-seat status grid for the 3D view (occupied / selected / available).
+    const seatStatus = allRowsFlat.map((label) =>
+      Array.from({ length: cols }).map((_, ci) => {
+        const sid = `${label}${ci + 1}`;
+        if (
+          serverConfirmedOccupied.includes(sid) ||
+          serverHeldSeats.includes(sid) ||
+          (tempHold && tempHold.seats?.includes(sid))
+        ) return "occupied";
+        if (selectedSeats.includes(sid)) return "selected";
+        return "available";
+      })
+    );
+    return { rowIndex, colIndex, rows, cols, hint, rowColors, screenImage, seatStatus };
+  }, [previewSeat, allRowsFlat, layout, rowToSection, showData, image_base_url, serverConfirmedOccupied, serverHeldSeats, tempHold, selectedSeats]);
+
+  // Click a seat inside the 3D view → instantly move the viewpoint there (and pick it).
+  const pickSeatFrom3D = (r, c) => {
+    const label = allRowsFlat[r];
+    if (!label) return;
+    const seatId = `${label}${c + 1}`;
+    if (
+      serverConfirmedOccupied.includes(seatId) ||
+      serverHeldSeats.includes(seatId) ||
+      (tempHold && tempHold.seats?.includes(seatId))
+    ) {
+      toast("That seat isn't available");
+      return;
+    }
+    setPreviewSeat(seatId);
+    if (!selectedSeats.includes(seatId)) handleSeatClick(seatId);
+  };
 
   const renderRow = (rowLabel) => {
     const seats = [];
@@ -1044,10 +1074,12 @@ const SeatLayout = () => {
                     cols={previewMeta.cols}
                     screenImage={previewMeta.screenImage}
                     rowColors={previewMeta.rowColors}
+                    seatStatus={previewMeta.seatStatus}
+                    onPickSeat={pickSeatFrom3D}
                   />
                 </Suspense>
                 <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs text-gray-200 whitespace-nowrap">
-                  🖱️ Drag to look around · scroll to zoom
+                  🖱️ Drag to look around · click any seat to sit there
                 </div>
               </div>
 
