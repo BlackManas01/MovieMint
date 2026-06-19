@@ -41,7 +41,7 @@ const MovieReviews = ({ movie }) => {
           <div className="mt-2">
             <Stars value={Math.round(score / 2)} size="w-5 h-5" />
           </div>
-          <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-emerald-400">
+          <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary">
             <ThumbsUp className="w-4 h-4" /> {liked}% liked it
           </p>
           <p className="text-xs text-gray-500 mt-1">{votes} ratings</p>
