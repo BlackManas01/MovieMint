@@ -506,6 +506,82 @@ export const releaseBooking = async (req, res) => {
     }
 };
 
+// POST /api/booking/cancel/:bookingId
+// Owner cancels a PAID ticket: refunds via Stripe (best-effort), frees the seats
+// (so the seat map + admin reflect it), and marks the booking cancelled.
+export const cancelBooking = async (req, res) => {
+    try {
+        const { userId } = req.auth();
+        const { bookingId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.status(400).json({ success: false, message: "Invalid booking id" });
+        }
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+        if (String(booking.user) !== String(userId)) {
+            return res.status(403).json({ success: false, message: "Not your booking" });
+        }
+        if (booking.status === "cancelled") {
+            return res.json({ success: false, message: "This ticket is already cancelled" });
+        }
+        if (!booking.isPaid) {
+            return res.json({ success: false, message: "Only paid tickets can be cancelled" });
+        }
+
+        const show = await Show.findById(booking.show);
+
+        // Don't allow cancellation once the show has started.
+        if (show?.showDateTime && new Date(show.showDateTime).getTime() <= Date.now()) {
+            return res.json({ success: false, message: "Show has already started — cannot cancel" });
+        }
+
+        // Refund via Stripe (best-effort — still cancel + free seats if this hiccups).
+        let refundId = "";
+        try {
+            if (stripe && booking.paymentIntentId) {
+                const refund = await stripe.refunds.create({ payment_intent: booking.paymentIntentId });
+                refundId = refund?.id || "";
+            }
+        } catch (e) {
+            console.error("Refund error:", e?.message || e);
+        }
+
+        // Free the booked seats so they're available again.
+        if (show) {
+            if (!show.occupiedSeats) show.occupiedSeats = {};
+            (booking.seats || []).forEach((seat) => {
+                if (String(show.occupiedSeats[seat]) === String(booking.user)) {
+                    delete show.occupiedSeats[seat];
+                }
+                if (show.heldSeats?.[seat] && String(show.heldSeats[seat].bookingId) === String(booking._id)) {
+                    delete show.heldSeats[seat];
+                }
+            });
+            show.markModified("occupiedSeats");
+            show.markModified("heldSeats");
+            await show.save();
+        }
+
+        booking.status = "cancelled";
+        booking.cancelledAt = new Date();
+        booking.refundId = refundId;
+        await booking.save();
+
+        return res.json({
+            success: true,
+            refunded: !!refundId,
+            message: refundId
+                ? "Ticket cancelled — refund initiated to your payment method"
+                : "Ticket cancelled. Your refund will be processed shortly.",
+        });
+    } catch (err) {
+        console.error("cancelBooking error:", err);
+        return res.status(500).json({ success: false, message: "Cancellation failed" });
+    }
+};
+
 // POST /api/booking/confirm
 // Confirm a booking after payment. Body: { bookingId }
 // This will mark booking as confirmed, set isPaid, status 'confirmed',

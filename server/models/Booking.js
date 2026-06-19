@@ -13,6 +13,9 @@ const bookingSchema = new mongoose.Schema({
     seats: { type: Array, required: true },                     // Array of seat IDs (e.g., ["A1", "A2"])
     isPaid: { type: Boolean, default: false },                  // Whether payment is confirmed
     paymentLink: { type: String },                              // Stripe checkout URL
+    paymentIntentId: { type: String, default: "" },             // Stripe PaymentIntent (for refunds)
+    refundId: { type: String, default: "" },                    // Stripe refund id (after cancellation)
+    cancelledAt: { type: Date, default: null },                 // When the user cancelled
     status: {                                                   // Booking lifecycle status
         type: String,
         enum: ["pending", "confirmed", "cancelled"],

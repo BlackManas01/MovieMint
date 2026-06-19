@@ -5,6 +5,7 @@ import {
     createBooking,
     releaseBooking,
     confirmBooking,
+    cancelBooking,
     getSeatsForShow,
     seatsStream,
     getBooking,
@@ -43,6 +44,9 @@ bookingRouter.post("/release", releaseBooking);
 
 // Confirm a booking after payment. Body: { bookingId }
 bookingRouter.post("/confirm-booking", confirmBooking);
+
+// Cancel a paid ticket (owner) — refunds + frees seats. Param: :bookingId
+bookingRouter.post("/cancel/:bookingId", cancelBooking);
 
 bookingRouter.get("/:bookingId/ticket", downloadTicketPdf);
 

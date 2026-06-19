@@ -45,6 +45,7 @@ const ListBookings = () => {
   };
 
   const getBookingStatus = (item) => {
+    if (item.status === "cancelled") return "CANCELLED";
     const ms = getShowDateMs(item);
     if (!ms) return "—";
     return ms < Date.now() ? "EXPIRED" : "UPCOMING";

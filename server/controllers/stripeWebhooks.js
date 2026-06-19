@@ -42,6 +42,7 @@ export const stripeWebhooks = async (request, response) => {
             booking.isPaid = true;
             booking.status = "confirmed";
             booking.paymentLink = "";
+            booking.paymentIntentId = session.payment_intent || booking.paymentIntentId || "";
             await booking.save();
 
             const show = await Show.findById(booking.show);

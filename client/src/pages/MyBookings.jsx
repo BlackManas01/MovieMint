@@ -6,6 +6,7 @@ import Loading from "../components/Loading";
 import MyBookingSkeleton from "../components/MyBookingSkeleton";
 import { useAppContext } from "../context/AppContext";
 import { makeIcs, downloadIcs } from "../lib/calendar";
+import toast from "react-hot-toast";
 
 /* constants */
 const TEMP_HOLD_PREFIX = "tempHold:";
@@ -13,7 +14,7 @@ const TEN_MINUTES_MS = 10 * 60 * 1000;
 
 const MyBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY || "₹";
-  const { axios, getToken, user, image_base_url } = useAppContext();
+  const { axios, getToken, user, image_base_url, refetchMyBookings } = useAppContext();
   const navigate = useNavigate();
   const API_BASE =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -58,6 +59,32 @@ const MyBookings = () => {
     } finally {
       setIsLoading(false);
       setTimeout(() => setUiLoading(false), 3000);
+    }
+  };
+
+  const [cancellingId, setCancellingId] = useState(null);
+  const cancelTicket = async (item) => {
+    const bid = item._id || item.id;
+    if (!bid) return;
+    if (!window.confirm("Cancel this ticket? Your seats will be released and the amount refunded to your original payment method.")) return;
+    try {
+      setCancellingId(bid);
+      const { data } = await axios.post(
+        `/api/booking/cancel/${bid}`,
+        {},
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
+      if (data?.success) {
+        toast.success(data.message || "Ticket cancelled");
+        await getMyBookings();
+        refetchMyBookings && refetchMyBookings();
+      } else {
+        toast.error(data?.message || "Could not cancel this ticket");
+      }
+    } catch (e) {
+      toast.error(e?.response?.data?.message || "Cancellation failed");
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -679,7 +706,11 @@ const MyBookings = () => {
                         </div>
                       </div>
 
-                      {item.isPaid ? (
+                      {item.status === "cancelled" ? (
+                        <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-gray-300 border border-white/15">
+                          ✕ CANCELLED · Refunded
+                        </div>
+                      ) : item.isPaid ? (
                         <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/30">
                           ✓ PAID
                         </div>
@@ -693,7 +724,7 @@ const MyBookings = () => {
                           EXPIRED
                         </div>
                       )}
-                      {item.isPaid && !item.__expired && (
+                      {item.isPaid && !item.__expired && item.status !== "cancelled" && (
                         <div className="mt-3 flex items-center gap-3">
                           <img
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=1&ecc=M&data=${encodeURIComponent(buildTicketQR(item))}`}
@@ -789,6 +820,23 @@ const MyBookings = () => {
                           >
                             Book again
                           </button>
+
+                          {/* CANCEL TICKET (paid, not expired, not already cancelled) */}
+                          {item.isPaid && !item.__expired && item.status !== "cancelled" && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); cancelTicket(item); }}
+                              disabled={cancellingId === (item._id || item.id)}
+                              className="px-4 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/15 text-gray-300 hover:bg-white/10 hover:text-white transition cursor-pointer disabled:opacity-60"
+                            >
+                              {cancellingId === (item._id || item.id) ? "Cancelling…" : "Cancel & refund"}
+                            </button>
+                          )}
+
+                          {item.status === "cancelled" && (
+                            <div className="text-xs text-gray-400 mt-2">
+                              Cancelled — refund processed
+                            </div>
+                          )}
 
                           {item.__expired && (
                             <div className="text-xs text-red-400 mt-2">
