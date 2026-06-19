@@ -8,6 +8,7 @@ import Loading from './components/Loading'
 import Navbar from './components/Navbar'
 import PendingPaymentBanner from './components/PendingPaymentBanner'
 import ScrollToTop from './components/ScrollToTop'
+import StarfieldBackground from './components/StarfieldBackground'
 import { useAppContext } from './context/AppContext'
 import Favorite from './pages/Favorite'
 import Home from './pages/Home'
@@ -53,6 +54,7 @@ const App = () => {
 
   return (
     <>
+      <StarfieldBackground />
       <ScrollToTop />
       <Toaster />
       {!isAdminRoute && <Navbar />}

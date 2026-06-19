@@ -1044,17 +1044,32 @@ const SeatLayout = () => {
         {/* 3D "view from seat" preview modal */}
         {previewSeat && previewMeta && (
           <div
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
             onClick={() => setPreviewSeat(null)}
           >
             <div
-              className="animate-pop-in w-full max-w-3xl rounded-3xl overflow-hidden border border-primary/25 bg-gradient-to-br from-[#15101c] to-black shadow-[0_40px_120px_-30px_rgba(168,85,247,0.6)]"
+              className="animate-pop-in relative w-full max-w-3xl rounded-[28px] overflow-hidden border border-primary/30 bg-gradient-to-br from-[#160f22] via-[#0d0a14] to-black shadow-[0_50px_140px_-35px_rgba(168,85,247,0.7)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-violet-300 font-semibold">View from seat</p>
-                  <h3 className="text-lg font-bold">Seat {previewSeat}</h3>
+              {/* glow ring accents */}
+              <div className="pointer-events-none absolute -top-24 -left-16 h-56 w-56 rounded-full bg-primary/25 blur-[90px]" />
+              <div className="pointer-events-none absolute -bottom-24 -right-16 h-56 w-56 rounded-full bg-fuchsia-500/20 blur-[90px]" />
+
+              <div className="relative flex items-center justify-between px-5 py-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="grid place-items-center h-11 w-11 rounded-2xl text-black font-extrabold text-base shadow-lg shadow-primary/30"
+                    style={{ background: `linear-gradient(135deg, ${(previewMeta.rowColors?.[previewMeta.rowIndex]) || "#c084fc"}, #c084fc)` }}
+                  >
+                    {previewSeat}
+                  </span>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-violet-300 font-semibold">Your view from</p>
+                    <h3 className="text-lg font-bold leading-tight">Seat {previewSeat}</h3>
+                    <p className="text-[11px] text-gray-400">
+                      {(rowToSection[previewSeat[0]]?.label || "Zone")} · {currency} {getSeatPrice(previewSeat)}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setPreviewSeat(null)}
@@ -1078,13 +1093,18 @@ const SeatLayout = () => {
                     onPickSeat={pickSeatFrom3D}
                   />
                 </Suspense>
-                <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs text-gray-200 whitespace-nowrap">
-                  🖱️ Drag to look around · click any seat to sit there
+                {/* top vignette so the header reads cleanly */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/60 to-transparent" />
+                <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs text-gray-100 whitespace-nowrap backdrop-blur-sm">
+                  🖱️ Drag to look around · 🪑 click any seat to sit there
                 </div>
               </div>
 
-              <div className="px-5 py-3 border-t border-white/10 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+              <div className="relative px-5 py-3.5 border-t border-white/10 flex items-center gap-2.5 bg-white/[0.02]">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+                </span>
                 <p className="text-sm text-gray-300">{previewMeta.hint}</p>
               </div>
             </div>

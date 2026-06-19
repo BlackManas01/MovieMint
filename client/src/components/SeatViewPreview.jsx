@@ -49,24 +49,25 @@ function Seat({ position, color, status, onSelect }) {
     const out = () => { document.body.style.cursor = "auto"; };
     const click = (e) => { e.stopPropagation(); if (!occupied && onSelect) onSelect(); };
 
+    // Seats face the screen (-z): backrest sits on the +z (back) side and reclines backward.
     return (
         <group position={position} onPointerOver={over} onPointerOut={out} onClick={click}>
             {/* seat cushion */}
-            <mesh position={[0, 0.08, 0.06]}>
+            <mesh position={[0, 0.08, -0.04]}>
                 <boxGeometry args={[0.62, 0.18, 0.56]} />
                 <meshStandardMaterial color={base} emissive={emissive} emissiveIntensity={emissiveIntensity} roughness={0.75} />
             </mesh>
-            {/* backrest (slightly reclined) */}
-            <mesh position={[0, 0.46, -0.22]} rotation={[-0.2, 0, 0]}>
+            {/* backrest (behind the sitter, reclined backward) */}
+            <mesh position={[0, 0.46, 0.24]} rotation={[0.2, 0, 0]}>
                 <boxGeometry args={[0.62, 0.7, 0.15]} />
                 <meshStandardMaterial color={base} emissive={emissive} emissiveIntensity={emissiveIntensity} roughness={0.75} />
             </mesh>
             {/* armrests */}
-            <mesh position={[-0.33, 0.22, 0.02]}>
+            <mesh position={[-0.33, 0.22, 0.0]}>
                 <boxGeometry args={[0.09, 0.16, 0.52]} />
                 <meshStandardMaterial color="#15121d" roughness={0.6} />
             </mesh>
-            <mesh position={[0.33, 0.22, 0.02]}>
+            <mesh position={[0.33, 0.22, 0.0]}>
                 <boxGeometry args={[0.09, 0.16, 0.52]} />
                 <meshStandardMaterial color="#15121d" roughness={0.6} />
             </mesh>
