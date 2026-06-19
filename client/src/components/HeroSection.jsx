@@ -177,7 +177,13 @@ const HeroSection = () => {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden">
+    <div
+      className="relative h-screen overflow-hidden"
+      style={{
+        WebkitMaskImage: "linear-gradient(to bottom, #000 78%, transparent 100%)",
+        maskImage: "linear-gradient(to bottom, #000 78%, transparent 100%)",
+      }}
+    >
       {/* Full-screen skeleton while loading */}
       {loading ? (
         <div className="absolute inset-0 bg-black flex items-center px-6 md:px-16 lg:px-36 animate-pulse">
@@ -219,8 +225,8 @@ const HeroSection = () => {
             ))}
           </div>
 
-          {/* Bottom fade: subtle blend of the cinematic hero into the page background */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 z-[5] surface-fade-up" />
+          {/* Bottom blend is handled by the container mask above, so the hero
+              dissolves straight into the page's night sky (no seam / dark band). */}
 
           {/* Left arrow */}
           <button

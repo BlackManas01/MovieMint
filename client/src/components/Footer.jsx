@@ -25,8 +25,6 @@ const Footer = () => {
             <div className="pointer-events-none absolute inset-0 -z-10">
                 <div className="absolute bottom-[-80px] left-0 h-56 w-56 bg-primary/18 blur-[100px]" />
                 <div className="absolute top-[-60px] right-0 h-56 w-56 bg-primary/15 blur-[110px]" />
-                {/* Fade the top into the page background so there is no seam with the section above */}
-                <div className="absolute top-0 inset-x-0 h-40 surface-fade-down" />
             </div>
 
             {/* Soft centered divider instead of a hard full-width line */}
