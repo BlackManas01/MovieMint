@@ -130,16 +130,17 @@ const DateSelect = ({ dateTime, onDateChange }) => {
   const handleWheel = (e) => {
     if (!dates.length) return;
 
+    // Only react to HORIZONTAL scroll. Ignore vertical scroll so the page
+    // (and the showtimes below) can scroll normally without changing the date.
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+
     const now = Date.now();
     if (now - wheelLockRef.current < 150) return;
     wheelLockRef.current = now;
 
-    const delta =
-      Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-
-    if (delta > 0) {
+    if (e.deltaX > 0) {
       handleNext();
-    } else if (delta < 0) {
+    } else if (e.deltaX < 0) {
       handlePrev();
     }
   };
