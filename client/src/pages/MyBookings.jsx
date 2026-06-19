@@ -96,6 +96,21 @@ const MyBookings = () => {
     item.theaterName ||
     "—";
 
+  // Build human-readable ticket text so scanning the QR actually shows the booking.
+  const buildTicketQR = (item) => {
+    const seats = (item.seats || item.bookedSeats || []).join(", ") || "-";
+    return [
+      "🎬 MovieMint e-Ticket",
+      `Movie: ${safeTitle(item)}`,
+      `Cinema: ${resolveTheaterName(item)}`,
+      `Date: ${formatShowDate(item)}`,
+      `Time: ${resolveShowTime(item)}`,
+      `Seats: ${seats}`,
+      `Amount: ${currency} ${resolveAmount(item)}`,
+      `Booking ID: ${(item._id || item.id || "").toString().toUpperCase()}`,
+    ].join("\n");
+  };
+
   const resolveAmount = (item) =>
     item.amount ??
     item.total ??
@@ -616,15 +631,17 @@ const MyBookings = () => {
                   key={key}
                   onClick={() => onClickBookingCard(item)}
                   className={`group relative overflow-hidden flex flex-col md:flex-row justify-between
-  rounded-2xl mt-4 p-4 max-w-4xl border transition-all duration-300 cursor-pointer
-  bg-gradient-to-br ${isPaid ? "from-primary/10 border-primary/20 hover:border-primary/40" : "from-amber-500/10 border-amber-500/25 hover:border-amber-400/45"} via-[#100b16]/80 to-black
+  rounded-2xl mt-4 p-4 md:pl-6 max-w-4xl border transition-all duration-300 cursor-pointer backdrop-blur-sm
+  ${isPaid ? "bg-white/[0.04] border-primary/20 hover:border-primary/40" : "bg-amber-500/[0.06] border-amber-500/25 hover:border-amber-400/45"}
   shadow-[0_18px_50px_-30px_rgba(168,85,247,0.5)] hover:-translate-y-0.5
   ${item.__expired ? "opacity-50 grayscale pointer-events-none" : ""}`}>
+                  {/* Left accent bar (ticket spine) */}
+                  <span className={`absolute left-0 top-5 bottom-5 w-[3px] rounded-full ${isPaid ? "bg-gradient-to-b from-primary to-primary-dull" : "bg-gradient-to-b from-amber-400 to-orange-500"} opacity-80 group-hover:opacity-100 transition-opacity`} />
                   <div className="flex flex-col md:flex-row gap-4">
                     {safePoster(item) ? (
-                      <img src={safePoster(item)} alt={safeTitle(item)} className="w-40 h-56 object-cover rounded-md shadow-sm" />
+                      <img src={safePoster(item)} alt={safeTitle(item)} className="w-40 h-56 object-cover rounded-xl ring-1 ring-white/15 shadow-lg" />
                     ) : (
-                      <div className="w-40 h-56 bg-white/6 rounded-md flex items-center justify-center text-sm text-gray-400">No poster</div>
+                      <div className="w-40 h-56 bg-white/6 rounded-xl flex items-center justify-center text-sm text-gray-400">No poster</div>
                     )}
 
                     <div className="flex flex-col justify-between py-1">
@@ -679,7 +696,7 @@ const MyBookings = () => {
                       {item.isPaid && !item.__expired && (
                         <div className="mt-3 flex items-center gap-3">
                           <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=0&data=${encodeURIComponent(`MOVIEMINT|${item._id || item.id || ""}`)}`}
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=1&ecc=M&data=${encodeURIComponent(buildTicketQR(item))}`}
                             alt="Ticket QR"
                             className="w-16 h-16 rounded-md bg-white p-1 shrink-0"
                             loading="lazy"
@@ -696,7 +713,7 @@ const MyBookings = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col justify-between items-end">
+                  <div className="flex flex-col justify-between items-end md:border-l md:border-dashed md:border-white/15 md:pl-5 mt-4 md:mt-0">
                     <div className="text-right">
                       <div className="text-3xl font-bold text-primary">{currency} {resolveAmount(item)}</div>
 

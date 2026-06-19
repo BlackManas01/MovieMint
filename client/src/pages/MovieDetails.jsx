@@ -34,6 +34,7 @@ const MovieDetails = () => {
     }
   });
   const [daySlots, setDaySlots] = useState([]);      // normalized slots for a single day
+  const [myBooking, setMyBooking] = useState(null);  // user's existing paid booking for this movie
 
   const {
     shows,
@@ -45,6 +46,43 @@ const MovieDetails = () => {
     image_base_url,
     city,
   } = useAppContext();
+
+  /* --------------------------------------------------------------------------
+   * If the user already has a paid booking for THIS movie (upcoming show),
+   * surface it on the detail page so they instantly see "you're booked".
+   * ----------------------------------------------------------------------- */
+  useEffect(() => {
+    let cancelled = false;
+    setMyBooking(null);
+    if (!user) return;
+    (async () => {
+      try {
+        const { data } = await axios.get("/api/user/bookings", {
+          headers: { Authorization: `Bearer ${await getToken()}` },
+        });
+        if (cancelled || !data?.success || !Array.isArray(data.bookings)) return;
+        const now = Date.now();
+        const mine = data.bookings
+          .filter((b) => b.isPaid)
+          .map((b) => {
+            const mid = b.show?.movie?._id || b.show?.movie || b.movie?._id || b.movie || b.movieId;
+            const when = b.show?.showDateTime || b.show?.showTime || b.showDateTime;
+            return { b, mid: String(mid || ""), t: when ? new Date(when).getTime() : 0 };
+          })
+          .filter((x) => x.mid === String(id) && x.t > now)
+          .sort((a, z) => a.t - z.t);
+        if (mine.length) {
+          const { b, t } = mine[0];
+          setMyBooking({
+            theater: b.show?.theater?.name || b.show?.theaterName || b.theaterName || "your cinema",
+            seats: (b.seats || b.bookedSeats || []).join(", "),
+            when: t,
+          });
+        }
+      } catch { /* ignore — banner is best-effort */ }
+    })();
+    return () => { cancelled = true; };
+  }, [id, user, axios, getToken]);
 
   /* --------------------------------------------------------------------------
    * Backend: load show data for this movie
@@ -292,6 +330,23 @@ const MovieDetails = () => {
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
+
+      {/* You're already booked for this movie */}
+      {myBooking && (
+        <button
+          onClick={() => navigate("/my-bookings")}
+          className="w-full text-left mb-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-2xl border border-primary/30 bg-primary/10 backdrop-blur-sm px-4 py-3 hover:border-primary/50 transition cursor-pointer"
+        >
+          <span className="inline-flex items-center gap-2 font-semibold text-primary">
+            🎟️ You're booked for this movie
+          </span>
+          <span className="text-sm text-gray-200">
+            {myBooking.seats && <>Seats <b className="text-white">{myBooking.seats}</b> · </>}
+            {myBooking.theater} · {new Date(myBooking.when).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+          </span>
+          <span className="sm:ml-auto text-xs text-primary/80 underline underline-offset-2 shrink-0">View booking →</span>
+        </button>
+      )}
 
       {/* Trailer Popup */}
       {showTrailer && trailerEmbedUrl && (
