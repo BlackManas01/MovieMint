@@ -22,7 +22,7 @@ import MovieCardSkeleton from "./MovieCardSkeleton"; // use your existing skelet
 const MovieCard = ({ movie, isUpcoming = false, loading = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { image_base_url, axios } = useAppContext();
+  const { image_base_url, axios, bookedMovieIds } = useAppContext();
 
   // If parent tells us to show loading, render skeleton (no extra network)
   if (loading) return <MovieCardSkeleton />;
@@ -123,6 +123,11 @@ const MovieCard = ({ movie, isUpcoming = false, loading = false }) => {
     >
       {/* Poster */}
       <div className="relative cursor-pointer overflow-hidden" onClick={handleClick}>
+        {!isUpcoming && bookedMovieIds?.has(String(movieId)) && (
+          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-black shadow-[0_6px_18px_-6px_rgba(168,85,247,0.9)]">
+            🎟️ Booked
+          </span>
+        )}
         {imagePath ? (
           <img
             loading="lazy"

@@ -1,5 +1,5 @@
 // context/AppContext.jsx - Global app state: auth, shows, favorites, admin check, and shared utilities
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ export const AppProvider = ({ children }) => {
     const [loadingShows, setLoadingShows] = useState(true);
     const [showsError, setShowsError] = useState(false);
     const [favoriteMovies, setFavoriteMovies] = useState([]);
+    const [myBookings, setMyBookings] = useState([]);
     const [city, setCityState] = useState(() => {
         try {
             return normalizeCity(localStorage.getItem("city"));
@@ -134,6 +135,37 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    // The signed-in user's bookings (used to show "booked" status across the app).
+    const fetchMyBookings = async () => {
+        if (!user) { setMyBookings([]); return; }
+        try {
+            const { data } = await axios.get("/api/user/bookings", {
+                headers: { Authorization: `Bearer ${await getToken()}` },
+            });
+            setMyBookings(data?.success && Array.isArray(data.bookings) ? data.bookings : []);
+        } catch {
+            setMyBookings([]);
+        }
+    };
+
+    // Derive: which movies are booked (paid, upcoming) and which seats the user
+    // booked per show — so cards/seat maps can highlight them.
+    const { bookedMovieIds, bookedSeatsByShow } = useMemo(() => {
+        const ids = new Set();
+        const byShow = {};
+        const now = Date.now();
+        (myBookings || []).forEach((b) => {
+            if (!b.isPaid) return;
+            const mid = b.show?.movie?._id || b.show?.movie || b.movie?._id || b.movie || b.movieId;
+            const sid = b.show?.showId || b.show?._id || b.showId;
+            const when = b.show?.showDateTime || b.show?.showTime || b.showDateTime;
+            const future = when ? new Date(when).getTime() > now : true;
+            if (mid && future) ids.add(String(mid));
+            if (sid) byShow[String(sid)] = (b.seats || b.bookedSeats || []);
+        });
+        return { bookedMovieIds: ids, bookedSeatsByShow: byShow };
+    }, [myBookings]);
+
     useEffect(() => {
         fetchShows();
     }, []);
@@ -142,6 +174,9 @@ export const AppProvider = ({ children }) => {
         if (user) {
             fetchIsAdmin();
             fetchFavoriteMovies();
+            fetchMyBookings();
+        } else {
+            setMyBookings([]);
         }
     }, [user]);
 
@@ -158,6 +193,9 @@ export const AppProvider = ({ children }) => {
         refetchShows: fetchShows,
         favoriteMovies,
         fetchFavoriteMovies,
+        bookedMovieIds,
+        bookedSeatsByShow,
+        refetchMyBookings: fetchMyBookings,
         image_base_url,
         city,
         setCity,

@@ -117,7 +117,7 @@ const SeatLayout = () => {
   const { id, date } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { axios, getToken, user, image_base_url, city } = useAppContext();
+  const { axios, getToken, user, image_base_url, city, bookedSeatsByShow } = useAppContext();
   const { openSignIn } = useClerk();
   const currency = import.meta.env.VITE_CURRENCY || "₹";
 
@@ -676,6 +676,12 @@ const SeatLayout = () => {
   // ---- 3D "view from seat" geometry ----
   const allRowsFlat = useMemo(() => layout.sections.flatMap((s) => s.rows), [layout]);
 
+  // Seats the signed-in user has already booked for THIS show (highlight as "yours").
+  const myBookedSeats = useMemo(
+    () => new Set(bookedSeatsByShow?.[String(selectedTimeSlot?.showId)] || []),
+    [bookedSeatsByShow, selectedTimeSlot]
+  );
+
   // Synthetic occupancy so the seat map visually matches the show's "fill" level
   // (Available / Filling fast / Almost full) shown on the showtime. Deterministic
   // per show, capped so a few seats always remain bookable.
@@ -772,14 +778,17 @@ const SeatLayout = () => {
     for (let i = 1; i <= seatsPerRow; i++) {
       const seatId = `${rowLabel}${i}`;
       const selected = selectedSeats.includes(seatId);
-      const serverOcc = !selected && (serverConfirmedOccupied.includes(seatId) || syntheticOccupied.has(seatId));
+      const mine = myBookedSeats.has(seatId);
+      const serverOcc = !selected && !mine && (serverConfirmedOccupied.includes(seatId) || syntheticOccupied.has(seatId));
       const localHeld =
         (tempHold && tempHold.seats.includes(seatId)) ||
         serverHeldSeats.includes(seatId);
       const sec = rowToSection[rowLabel];
       const secLabel = sec ? sec.label : "ZONE";
       const secPrice = sec ? sec.price : basePrice;
-      const tooltipText = `${secLabel} • ${currency} ${secPrice} • ${seatId}`;
+      const tooltipText = mine
+        ? `Your booked seat • ${seatId}`
+        : `${secLabel} • ${currency} ${secPrice} • ${seatId}`;
 
       seats.push(
         <div key={seatId} className="relative group">
@@ -787,13 +796,16 @@ const SeatLayout = () => {
             onClick={() => handleSeatClick(seatId)}
             aria-label={tooltipText}
             className={`relative h-9 w-9 rounded-t-[11px] rounded-b-md border text-[11px] font-medium flex items-center justify-center transition-all duration-200 will-change-transform
+              ${mine ? "bg-gradient-to-b from-cyan-400 to-cyan-600 text-black border-cyan-300 pointer-events-none shadow-[0_8px_22px_-6px_rgba(34,211,238,0.85)]" : ""}
               ${serverOcc ? "bg-neutral-600/60 text-gray-400 border-white/10 pointer-events-none cursor-not-allowed" : ""}
               ${localHeld ? "bg-transparent border-transparent pointer-events-none" : ""}
               ${selected ? "bg-gradient-to-b from-primary to-primary-dull text-black border-primary -translate-y-0.5 scale-105 shadow-[0_8px_22px_-6px_rgba(168,85,247,0.95)]" : ""}
-              ${!serverOcc && !localHeld && !selected ? "bg-gradient-to-b from-white/15 to-white/[0.03] text-gray-200 border-white/15 cursor-pointer hover:-translate-y-0.5 hover:scale-110 hover:border-primary/60 hover:from-primary/25 hover:to-primary/5 hover:shadow-[0_8px_20px_-8px_rgba(168,85,247,0.85)]" : ""}
+              ${!serverOcc && !localHeld && !selected && !mine ? "bg-gradient-to-b from-white/15 to-white/[0.03] text-gray-200 border-white/15 cursor-pointer hover:-translate-y-0.5 hover:scale-110 hover:border-primary/60 hover:from-primary/25 hover:to-primary/5 hover:shadow-[0_8px_20px_-8px_rgba(168,85,247,0.85)]" : ""}
             `}
           >
-            {serverOcc ? (
+            {mine ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            ) : serverOcc ? (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
             ) : localHeld ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -806,7 +818,7 @@ const SeatLayout = () => {
           <div aria-hidden className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-9 h-1 rounded ${sec ? sec.colorClass : "bg-primary"} opacity-30`} />
 
           {/* Hover eye → preview the view from this seat (only for seats you can actually pick) */}
-          {!serverOcc && !localHeld && (
+          {!serverOcc && !localHeld && !mine && (
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setPreviewSeat(seatId); }}
@@ -1032,6 +1044,14 @@ const SeatLayout = () => {
               <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-gradient-to-b from-primary to-primary-dull border border-primary" />
               <span className="text-[11px] text-gray-300">Selected</span>
             </div>
+            {myBookedSeats.size > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="h-4 w-4 rounded-t-[6px] rounded-b-[2px] bg-gradient-to-b from-cyan-400 to-cyan-600 border border-cyan-300 flex items-center justify-center">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#06212a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </span>
+                <span className="text-[11px] text-cyan-300">Your seat</span>
+              </div>
+            )}
           </div>
         </div>
 
