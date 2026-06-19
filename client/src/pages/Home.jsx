@@ -8,7 +8,7 @@ import RecentlyViewed from '../components/RecentlyViewed'
 
 const Home = () => {
   return (
-    <main className="min-h-screen text-white relative overflow-hidden bg-[#08090d]">
+    <main className="min-h-screen text-white relative overflow-hidden">
 
       {/* Global Cinematic Gradient Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
@@ -20,9 +20,9 @@ const Home = () => {
         <div className="absolute bottom-[-180px] right-[-120px] h-[500px] w-[500px] 
           bg-[#6a0dad38] blur-[170px] rounded-full" />
 
-        {/* Center Soft Blend */}
+        {/* Center Soft Blend (kept transparent so the night sky shows through) */}
         <div className="absolute inset-0 
-          bg-gradient-to-b from-transparent via-[#090a0f33] to-[#090a0f]" />
+          bg-gradient-to-b from-transparent via-transparent to-transparent" />
       </div>
 
       <HeroSection />

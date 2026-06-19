@@ -14,7 +14,7 @@ const Layout = () => {
   }, [])
 
   return isAdmin ? (
-    <div className="relative min-h-screen bg-[#070b0a] text-white overflow-hidden">
+    <div className="relative min-h-screen text-white overflow-hidden">
       {/* Ambient warm glows */}
       <div className="pointer-events-none fixed -top-32 -right-24 h-96 w-96 rounded-full bg-violet-500/10 blur-[120px]" />
       <div className="pointer-events-none fixed -bottom-40 -left-24 h-96 w-96 rounded-full bg-purple-500/10 blur-[120px]" />
